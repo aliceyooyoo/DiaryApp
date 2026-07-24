@@ -35,7 +35,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, CalendarActivity::class.java))
         }
 
-        // B파트: 학사일정 이동
+         //학사일정 이동
         btnAcademicCalendar?.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.swu.ac.kr/swu/927/subview.do"))
             startActivity(intent)
@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
                 layoutParams = params
             }
 
-            // B파트: 대표사진 표시 영역
+           //대표사진 표시 영역
             val imgView = ImageView(this).apply {
                 val imgParams = LinearLayout.LayoutParams(180, 180)
                 imgParams.setMargins(0, 0, 24, 0)
@@ -72,7 +72,7 @@ class MainActivity : AppCompatActivity() {
                 setBackgroundColor(0xFFE0E0E0.toInt())
             }
 
-            // Throwable로 캐치하여 SecurityException 발생 시에도 절대 앱이 종료되지 않도록 처리
+
             try {
                 val imageUriField = diary::class.java.getDeclaredField("imageUri")
                 imageUriField.isAccessible = true
