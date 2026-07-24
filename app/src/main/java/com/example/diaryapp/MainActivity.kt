@@ -1,16 +1,25 @@
 package com.example.diaryapp
 
-import DiaryDbHelper
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
+
+    private val apiKey = "894efd0493fa47be9bd9c09d27182253"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,16 +45,60 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
+        val tvGreeting = findViewById<TextView>(R.id.tvGreeting)
+        val sdf = SimpleDateFormat("M월 d일 EEEE", Locale.KOREA)
+        val today = sdf.format(Date())
+        tvGreeting.text = "$today\n오늘 하루는 어땠나요?"
+
+        // TODO: 나중에 C가 만든 실제 GPS 좌표로 교체 (지금은 서울 좌표로 임시 고정)
+        fetchWeather(37.5665, 126.9780) { result ->
+            findViewById<TextView>(R.id.tvTemp).text = "${result.temp}°C"
+            findViewById<TextView>(R.id.tvDescription).text = result.description
+            findViewById<TextView>(R.id.tvTempMaxMin).text = "최고 ${result.tempMax}° / 최저 ${result.tempMin}°"
+            result.iconBitmap?.let {
+                findViewById<ImageView>(R.id.ivWeatherIcon).setImageBitmap(it)
+            }
+        }
+
         val container = findViewById<LinearLayout>(R.id.recentDiaryContainer)
         container.removeAllViews()
 
         val dbHelper = DiaryDbHelper(this)
         val diaryList = dbHelper.getAllDiaries()
-
         val previewList = diaryList.take(3)
         for (diary in previewList) {
             container.addView(createDiaryCard(diary))
         }
+    }
+
+    private fun fetchWeather(lat: Double, lon: Double, onResult: (WeatherResult) -> Unit) {
+        Thread {
+            try {
+                val urlStr = "https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric&lang=kr"
+                val conn = URL(urlStr).openConnection() as HttpURLConnection
+                conn.requestMethod = "GET"
+                val response = conn.inputStream.bufferedReader().readText()
+                val json = JSONObject(response)
+
+                val main = json.getJSONObject("main")
+                val weather = json.getJSONArray("weather").getJSONObject(0)
+
+                val temp = main.getDouble("temp").toInt()
+                val tempMax = main.getDouble("temp_max").toInt()
+                val tempMin = main.getDouble("temp_min").toInt()
+                val humidity = main.getInt("humidity")
+                val description = weather.getString("description")
+                val icon = weather.getString("icon")
+
+                val iconUrl = URL("https://openweathermap.org/img/wn/$icon@2x.png")
+                val iconBitmap = BitmapFactory.decodeStream(iconUrl.openStream())
+
+                val result = WeatherResult(temp, tempMax, tempMin, humidity, description, icon, iconBitmap)
+                runOnUiThread { onResult(result) }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
     }
 
     private fun createDiaryCard(diary: Diary): LinearLayout {
@@ -63,7 +116,6 @@ class MainActivity : AppCompatActivity() {
         card.layoutParams = cardParams
         card.setBackgroundColor(Color.WHITE)
 
-        // 사진 자리 (기본값: 회색 박스)
         val photoBox = View(this)
         val photoSize = (72 * dp).toInt()
         val photoParams = LinearLayout.LayoutParams(photoSize, photoSize)
