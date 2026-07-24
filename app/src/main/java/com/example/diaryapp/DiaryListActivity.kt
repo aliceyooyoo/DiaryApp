@@ -1,49 +1,25 @@
 package com.example.diaryapp
 
 import DiaryDbHelper
-import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : AppCompatActivity() {
+class DiaryListActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(R.layout.activity_diary_list)
 
-        val btnWrite = findViewById<Button>(R.id.btnWrite)
-        val btnCalendar = findViewById<Button>(R.id.btnCalendar)
-        val btnMore = findViewById<TextView>(R.id.btnMore)
-
-        btnWrite.setOnClickListener {
-            startActivity(Intent(this, WriteActivity::class.java))
-        }
-
-        btnCalendar.setOnClickListener {
-            startActivity(Intent(this, CalendarActivity::class.java))
-        }
-
-        btnMore.setOnClickListener {
-            startActivity(Intent(this, DiaryListActivity::class.java))
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        val container = findViewById<LinearLayout>(R.id.recentDiaryContainer)
-        container.removeAllViews()
+        val container = findViewById<LinearLayout>(R.id.diaryContainer)
 
         val dbHelper = DiaryDbHelper(this)
         val diaryList = dbHelper.getAllDiaries()
 
-        val previewList = diaryList.take(3)
-        for (diary in previewList) {
+        for (diary in diaryList) {
             container.addView(createDiaryCard(diary))
         }
     }
@@ -63,7 +39,6 @@ class MainActivity : AppCompatActivity() {
         card.layoutParams = cardParams
         card.setBackgroundColor(Color.WHITE)
 
-        // 사진 자리 (기본값: 회색 박스)
         val photoBox = View(this)
         val photoSize = (72 * dp).toInt()
         val photoParams = LinearLayout.LayoutParams(photoSize, photoSize)
@@ -86,7 +61,6 @@ class MainActivity : AppCompatActivity() {
         val content = TextView(this)
         content.text = diary.content
         content.textSize = 13f
-        content.maxLines = 2
 
         right.addView(date)
         right.addView(title)

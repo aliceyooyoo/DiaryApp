@@ -12,6 +12,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.DiaryApp">
         <activity
+            android:name=".DiaryListActivity"
+            android:exported="false" />
+        <activity
             android:name=".DetailActivity"
             android:exported="false" />
         <activity
