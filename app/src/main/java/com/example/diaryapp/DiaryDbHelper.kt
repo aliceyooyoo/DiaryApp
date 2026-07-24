@@ -1,12 +1,11 @@
-package com.example.diaryapp
-
 import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.example.diaryapp.Diary
 
 class DiaryDbHelper(context: Context) :
-    SQLiteOpenHelper(context, "diary.db", null, 2) {
+    SQLiteOpenHelper(context, "diary.db", null, 1) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -15,10 +14,7 @@ class DiaryDbHelper(context: Context) :
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 date TEXT,
                 title TEXT,
-                content TEXT,
-                weatherIcon TEXT,
-                weatherTemp TEXT,
-                weatherDesc TEXT
+                content TEXT
             )
             """.trimIndent()
         )
@@ -29,15 +25,12 @@ class DiaryDbHelper(context: Context) :
         onCreate(db)
     }
 
-    fun insertDiary(date: String, title: String, content: String, weatherIcon: String?, weatherTemp: String?, weatherDesc: String?) {
+    fun insertDiary(date: String, title: String, content: String) {
         val db = writableDatabase
         val values = ContentValues()
         values.put("date", date)
         values.put("title", title)
         values.put("content", content)
-        values.put("weatherIcon", weatherIcon)
-        values.put("weatherTemp", weatherTemp)
-        values.put("weatherDesc", weatherDesc)
         db.insert("diary", null, values)
         db.close()
     }
@@ -50,10 +43,7 @@ class DiaryDbHelper(context: Context) :
             val date = cursor.getString(cursor.getColumnIndexOrThrow("date"))
             val title = cursor.getString(cursor.getColumnIndexOrThrow("title"))
             val content = cursor.getString(cursor.getColumnIndexOrThrow("content"))
-            val weatherIcon = cursor.getString(cursor.getColumnIndexOrThrow("weatherIcon"))
-            val weatherTemp = cursor.getString(cursor.getColumnIndexOrThrow("weatherTemp"))
-            val weatherDesc = cursor.getString(cursor.getColumnIndexOrThrow("weatherDesc"))
-            list.add(Diary(date, title, content, weatherIcon, weatherTemp, weatherDesc))
+            list.add(Diary(date, title, content))
         }
         cursor.close()
         db.close()
