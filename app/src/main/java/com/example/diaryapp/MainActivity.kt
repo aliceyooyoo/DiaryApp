@@ -1,11 +1,11 @@
 package com.example.diaryapp
-
-import DiaryDbHelper
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.graphics.Typeface
 import android.icu.text.SimpleDateFormat
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -13,6 +13,8 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -26,6 +28,12 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
 
         val btnWrite = findViewById<Button>(R.id.btnWrite)
         val btnCalendar = findViewById<Button>(R.id.btnCalendar)
@@ -53,7 +61,7 @@ class MainActivity : AppCompatActivity() {
         tvGreeting.text = "$today\n오늘 하루는 어땠나요?"
 
         // TODO: 나중에 C가 만든 실제 GPS 좌표로 교체 (지금은 서울 좌표로 임시 고정)
-        this.fetchWeather(37.5665, 126.9780) { result ->
+        fetchWeather(37.5665, 126.9780) { result ->
             findViewById<TextView>(R.id.tvTemp).text = "${result.temp}°C"
             findViewById<TextView>(R.id.tvDescription).text = result.description
             findViewById<TextView>(R.id.tvTempMaxMin).text = "최고 ${result.tempMax}° / 최저 ${result.tempMin}°"
@@ -110,21 +118,27 @@ class MainActivity : AppCompatActivity() {
         val card = LinearLayout(this)
         card.orientation = LinearLayout.HORIZONTAL
         card.setPadding((16 * dp).toInt(), (16 * dp).toInt(), (16 * dp).toInt(), (16 * dp).toInt())
-
-        val cardParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT
-        )
+        val cardParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         cardParams.setMargins(0, 0, 0, (12 * dp).toInt())
         card.layoutParams = cardParams
         card.setBackgroundColor(Color.WHITE)
 
-        val photoBox = View(this)
+        val photoView = ImageView(this)
         val photoSize = (72 * dp).toInt()
         val photoParams = LinearLayout.LayoutParams(photoSize, photoSize)
         photoParams.setMargins(0, 0, (16 * dp).toInt(), 0)
-        photoBox.layoutParams = photoParams
-        photoBox.setBackgroundColor(Color.parseColor("#D9D9D9"))
+        photoView.layoutParams = photoParams
+        photoView.scaleType = ImageView.ScaleType.CENTER_CROP
+
+        if (!diary.imageUri.isNullOrEmpty()) {
+            try {
+                photoView.setImageURI(Uri.parse(diary.imageUri))
+            } catch (e: Exception) {
+                photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+            }
+        } else {
+            photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+        }
 
         val right = LinearLayout(this)
         right.orientation = LinearLayout.VERTICAL
@@ -137,22 +151,31 @@ class MainActivity : AppCompatActivity() {
         val title = TextView(this)
         title.text = diary.title
         title.textSize = 16f
+        title.setTypeface(null, Typeface.BOLD)
 
         val content = TextView(this)
         content.text = diary.content
         content.textSize = 13f
+        content.setTextColor(Color.parseColor("#555555"))
         content.maxLines = 2
+
+        val weather = TextView(this)
+        weather.text = if (!diary.weatherTemp.isNullOrEmpty()) "${diary.weatherTemp} ${diary.weatherDesc ?: ""}" else ""
+        weather.textSize = 11f
+        weather.setTextColor(Color.parseColor("#999999"))
 
         right.addView(date)
         right.addView(title)
         right.addView(content)
+        right.addView(weather)
 
-        card.addView(photoBox)
+        card.addView(photoView)
         card.addView(right)
 
         return card
     }
 }
+
 data class WeatherResult(
     val temp: Int,
     val tempMax: Int,
