@@ -1,5 +1,5 @@
 package com.example.diaryapp
-import DiaryDbHelper
+import com.example.diaryapp.DiaryDbHelper
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View

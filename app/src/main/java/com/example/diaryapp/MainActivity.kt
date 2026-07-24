@@ -1,10 +1,11 @@
 package com.example.diaryapp
 
-import DiaryDbHelper
+import com.example.diaryapp.DiaryDbHelper
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
+import android.net.Uri
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.view.View
@@ -30,6 +31,7 @@ class MainActivity : AppCompatActivity() {
         val btnWrite = findViewById<Button>(R.id.btnWrite)
         val btnCalendar = findViewById<Button>(R.id.btnCalendar)
         val btnMore = findViewById<TextView>(R.id.btnMore)
+        val btnSchedule = findViewById<TextView>(R.id.btnSchedule) // 학사일정 버튼
 
         btnWrite.setOnClickListener {
             startActivity(Intent(this, WriteActivity::class.java))
@@ -41,6 +43,12 @@ class MainActivity : AppCompatActivity() {
 
         btnMore.setOnClickListener {
             startActivity(Intent(this, DiaryListActivity::class.java))
+        }
+
+        // 학사일정 링크 클릭 리스너 연결
+        btnSchedule.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.swu.ac.kr/swu/927/subview.do"))
+            startActivity(intent)
         }
     }
 
@@ -119,12 +127,23 @@ class MainActivity : AppCompatActivity() {
         card.layoutParams = cardParams
         card.setBackgroundColor(Color.WHITE)
 
-        val photoBox = View(this)
+        // 대표 사진 렌더링
+        val photoView = ImageView(this)
         val photoSize = (72 * dp).toInt()
         val photoParams = LinearLayout.LayoutParams(photoSize, photoSize)
         photoParams.setMargins(0, 0, (16 * dp).toInt(), 0)
-        photoBox.layoutParams = photoParams
-        photoBox.setBackgroundColor(Color.parseColor("#D9D9D9"))
+        photoView.layoutParams = photoParams
+        photoView.scaleType = ImageView.ScaleType.CENTER_CROP
+
+        if (!diary.imageUri.isNullOrEmpty()) {
+            try {
+                photoView.setImageURI(Uri.parse(diary.imageUri))
+            } catch (e: Exception) {
+                photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+            }
+        } else {
+            photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+        }
 
         val right = LinearLayout(this)
         right.orientation = LinearLayout.VERTICAL
@@ -147,12 +166,13 @@ class MainActivity : AppCompatActivity() {
         right.addView(title)
         right.addView(content)
 
-        card.addView(photoBox)
+        card.addView(photoView)
         card.addView(right)
 
         return card
     }
 }
+
 data class WeatherResult(
     val temp: Int,
     val tempMax: Int,
