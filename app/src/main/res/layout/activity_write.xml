@@ -13,7 +13,6 @@
         android:id="@+id/btnClose"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
         android:clickable="true"
         android:focusable="true"
         android:padding="8dp"
@@ -28,7 +27,6 @@
         android:id="@+id/btnDone"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
         android:clickable="true"
         android:focusable="true"
         android:padding="8dp"
@@ -38,31 +36,118 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- 날씨 / 위치 정보 -->
+    <LinearLayout
+        android:id="@+id/layoutInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        app:layout_constraintTop_toBottomOf="@id/btnClose">
+
+        <TextView
+            android:id="@+id/tvWeather"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#F0F0F0"
+            android:padding="6dp"
+            android:text="28℃ 구름 조금"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:background="#F0F0F0"
+            android:padding="6dp"
+            android:text="📍 서울여자대학교"
+            android:textSize="12sp" />
+    </LinearLayout>
+
     <!-- 제목 -->
     <EditText
         android:id="@+id/etTitle"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="16dp"
+        android:background="@null"
         android:hint="제목"
-        app:layout_constraintTop_toBottomOf="@id/btnClose"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toBottomOf="@id/layoutInfo" />
 
     <!-- 본문 -->
     <EditText
         android:id="@+id/etContent"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginTop="12dp"
-        android:layout_marginBottom="80dp"
+        android:background="@null"
         android:gravity="top"
         android:hint="본문"
-        android:inputType="textMultiLine"
-        android:scrollbars="vertical"
-        app:layout_constraintTop_toBottomOf="@id/etTitle"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@id/imgSelected"
+        app:layout_constraintTop_toBottomOf="@id/etTitle" />
+
+    <!-- 선택한 사진 미리보기 -->
+    <ImageView
+        android:id="@+id/imgSelected"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginBottom="12dp"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/layoutBottomMenu"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 선택한 스티커 미리보기 -->
+    <TextView
+        android:id="@+id/tvSelectedSticker"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:textSize="32sp"
+        app:layout_constraintBottom_toBottomOf="@id/imgSelected"
+        app:layout_constraintStart_toEndOf="@id/imgSelected"
+        app:layout_constraintTop_toTopOf="@id/imgSelected" />
+
+    <!-- 하단 메뉴 (사진 / 스티커 / 장소) -->
+    <LinearLayout
+        android:id="@+id/layoutBottomMenu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <Button
+            android:id="@+id/btnAddPhoto"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="사진"
+            android:textColor="#333333" />
+
+        <Button
+            android:id="@+id/btnAddSticker"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="스티커"
+            android:textColor="#333333" />
+
+        <Button
+            android:id="@+id/btnAddLocation"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="장소"
+            android:textColor="#333333" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
