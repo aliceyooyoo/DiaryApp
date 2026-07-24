@@ -1,8 +1,10 @@
 package com.example.diaryapp
-import DiaryDbHelper
+
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +22,22 @@ class DiaryListActivity : AppCompatActivity() {
 
         for (diary in diaryList) {
             container.addView(createDiaryCard(diary))
+        }
+
+        val btnHome = findViewById<Button>(R.id.btnHome)
+        val btnWrite = findViewById<Button>(R.id.btnWrite)
+        val btnCalendar = findViewById<Button>(R.id.btnCalendar)
+
+        btnHome.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
+
+        btnWrite.setOnClickListener {
+            startActivity(Intent(this, WriteActivity::class.java))
+        }
+
+        btnCalendar.setOnClickListener {
+            startActivity(Intent(this, CalendarActivity::class.java))
         }
     }
 

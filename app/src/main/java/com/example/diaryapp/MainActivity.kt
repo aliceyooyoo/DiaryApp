@@ -1,11 +1,11 @@
 package com.example.diaryapp
 
-import DiaryDbHelper
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.icu.text.SimpleDateFormat
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -30,6 +30,11 @@ class MainActivity : AppCompatActivity() {
         val btnWrite = findViewById<Button>(R.id.btnWrite)
         val btnCalendar = findViewById<Button>(R.id.btnCalendar)
         val btnMore = findViewById<TextView>(R.id.btnMore)
+        val btnSchedule = findViewById<TextView>(R.id.btnSchedule)
+        btnSchedule.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.swu.ac.kr/swu/927/subview.do"))
+            startActivity(intent)
+        }
 
         btnWrite.setOnClickListener {
             startActivity(Intent(this, WriteActivity::class.java))

@@ -1,5 +1,6 @@
 package com.example.diaryapp
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.GridLayout
@@ -29,8 +30,11 @@ class CalendarActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // activity_main.xml 연결
-        setContentView(R.layout.activity_main)
+
+        setContentView(R.layout.activity_calendar)
+        val btnHome = findViewById<Button>(R.id.btnHome)
+        val btnWrite = findViewById<Button>(R.id.btnWrite)
+        val btnCalendar = findViewById<Button>(R.id.btnCalendar)
 
         // XML에 만든 화면 요소 연결
         calendarGrid = findViewById(R.id.calendarGrid)
@@ -54,6 +58,17 @@ class CalendarActivity : AppCompatActivity() {
         btnNextMonth.setOnClickListener {
             currentCalendar.add(Calendar.MONTH, 1)
             updateCalendar()
+        }
+        btnHome.setOnClickListener {
+            startActivity(Intent(this, MainActivity::class.java))
+        }
+
+        btnWrite.setOnClickListener {
+            startActivity(Intent(this, WriteActivity::class.java))
+        }
+
+        btnCalendar.setOnClickListener {
+            // 현재 캘린더 화면이므로 아무 동작 안 함
         }
     }
 
