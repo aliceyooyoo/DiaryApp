@@ -7,7 +7,6 @@ import android.graphics.Color
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -31,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         val btnCalendar = findViewById<Button>(R.id.btnCalendar)
         val btnMore = findViewById<TextView>(R.id.btnMore)
         val btnSchedule = findViewById<TextView>(R.id.btnSchedule)
+
         btnSchedule.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.swu.ac.kr/swu/927/subview.do"))
             startActivity(intent)
@@ -58,7 +58,7 @@ class MainActivity : AppCompatActivity() {
         tvGreeting.text = "$today\n오늘 하루는 어땠나요?"
 
         // TODO: 나중에 C가 만든 실제 GPS 좌표로 교체 (지금은 서울 좌표로 임시 고정)
-        this.fetchWeather(37.5665, 126.9780) { result ->
+        fetchWeather(37.5665, 126.9780) { result ->
             findViewById<TextView>(R.id.tvTemp).text = "${result.temp}°C"
             findViewById<TextView>(R.id.tvDescription).text = result.description
             findViewById<TextView>(R.id.tvTempMaxMin).text = "최고 ${result.tempMax}° / 최저 ${result.tempMin}°"
@@ -109,6 +109,28 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
+    private fun loadImageSafely(imageView: ImageView, uriString: String?) {
+        if (uriString.isNullOrEmpty()) {
+            imageView.setImageDrawable(null)
+            imageView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+            return
+        }
+        try {
+            val uri = Uri.parse(uriString)
+            val inputStream = contentResolver.openInputStream(uri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+            if (bitmap != null) {
+                imageView.setImageBitmap(bitmap)
+            } else {
+                imageView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+            }
+        } catch (e: Exception) {
+            imageView.setImageDrawable(null)
+            imageView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+        }
+    }
+
     private fun createDiaryCard(diary: Diary): LinearLayout {
         val dp = resources.displayMetrics.density
 
@@ -124,12 +146,19 @@ class MainActivity : AppCompatActivity() {
         card.layoutParams = cardParams
         card.setBackgroundColor(Color.WHITE)
 
-        val photoBox = View(this)
+        card.setOnClickListener {
+            val intent = Intent(this, DetailActivity::class.java)
+            intent.putExtra("diaryId", diary.id)
+            startActivity(intent)
+        }
+
+        val photoView = ImageView(this)
         val photoSize = (72 * dp).toInt()
         val photoParams = LinearLayout.LayoutParams(photoSize, photoSize)
         photoParams.setMargins(0, 0, (16 * dp).toInt(), 0)
-        photoBox.layoutParams = photoParams
-        photoBox.setBackgroundColor(Color.parseColor("#D9D9D9"))
+        photoView.layoutParams = photoParams
+        photoView.scaleType = ImageView.ScaleType.CENTER_CROP
+        loadImageSafely(photoView, diary.imageUri)
 
         val right = LinearLayout(this)
         right.orientation = LinearLayout.VERTICAL
@@ -152,12 +181,13 @@ class MainActivity : AppCompatActivity() {
         right.addView(title)
         right.addView(content)
 
-        card.addView(photoBox)
+        card.addView(photoView)
         card.addView(right)
 
         return card
     }
 }
+
 data class WeatherResult(
     val temp: Int,
     val tempMax: Int,

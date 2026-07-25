@@ -6,7 +6,7 @@ import android.graphics.Color
 import android.icu.text.SimpleDateFormat
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
+import android.view.MotionEvent
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -22,22 +22,30 @@ import java.net.URL
 import java.util.Date
 import java.util.Locale
 
+data class PlacedSticker(val emoji: String, var x: Float, var y: Float)
+
 class WriteActivity : AppCompatActivity() {
 
     private val apiKey = "894efd0493fa47be9bd9c09d27182253"
     private var currentWeather: WeatherResult? = null
+    private var editDiaryId: Int = -1
 
     private val photoList = mutableListOf<Uri>()
     private var representativeImageUri: Uri? = null
-    private var selectedSticker: String = ""
+    private val placedStickers = mutableListOf<PlacedSticker>()
 
-    private val getImage = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris: List<Uri> ->
+    private lateinit var stickerCanvas: FrameLayout
+
+    private val getImage = registerForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia()
+    ) { uris: List<Uri> ->
         if (uris.isNotEmpty()) {
+            val copiedUris = uris.map { copyImageToInternalStorage(it) }
             photoList.clear()
-            photoList.addAll(uris)
-            representativeImageUri = uris[0]
+            photoList.addAll(copiedUris)
+            representativeImageUri = copiedUris[0]
             updatePhotoListUI()
-            Toast.makeText(this, "사진 ${uris.size}장이 첨부되었습니다.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "사진 ${copiedUris.size}장이 첨부되었습니다.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -45,13 +53,45 @@ class WriteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_write)
 
+        editDiaryId = intent.getIntExtra("diaryId", -1)
+
         val btnClose = findViewById<TextView>(R.id.btnClose)
         val btnDone = findViewById<TextView>(R.id.btnDone)
         val etTitle = findViewById<EditText>(R.id.etTitle)
         val etContent = findViewById<EditText>(R.id.etContent)
         val btnAddPhoto = findViewById<TextView>(R.id.btnAddPhoto)
         val btnAddSticker = findViewById<TextView>(R.id.btnAddSticker)
-        val tvSelectedSticker = findViewById<TextView>(R.id.tvSelectedSticker)
+        stickerCanvas = findViewById(R.id.stickerCanvas)
+
+        // 수정 모드면 기존 데이터 불러와서 채워넣기
+        if (editDiaryId != -1) {
+            val existing = DiaryDbHelper(this).getDiaryById(editDiaryId)
+            existing?.let { diary ->
+                etTitle.setText(diary.title)
+                etContent.setText(diary.content)
+
+                if (!diary.imageUri.isNullOrEmpty()) {
+                    representativeImageUri = Uri.parse(diary.imageUri)
+                    photoList.clear()
+                    photoList.add(representativeImageUri!!)
+                    updatePhotoListUI()
+                }
+
+                if (!diary.stickerData.isNullOrEmpty()) {
+                    diary.stickerData.split(",").forEach { entry ->
+                        val parts = entry.split(":")
+                        if (parts.size == 3) {
+                            val emoji = parts[0]
+                            val x = parts[1].toFloatOrNull() ?: 100f
+                            val y = parts[2].toFloatOrNull() ?: 100f
+                            val placed = PlacedSticker(emoji, x, y)
+                            placedStickers.add(placed)
+                            drawStickerView(placed)
+                        }
+                    }
+                }
+            }
+        }
 
         // TODO: 나중에 C가 만든 실제 GPS 좌표로 교체 (지금은 서울 좌표로 임시 고정)
         fetchWeather(37.5665, 126.9780) { result ->
@@ -66,11 +106,15 @@ class WriteActivity : AppCompatActivity() {
         btnClose.setOnClickListener { finish() }
 
         btnAddPhoto.setOnClickListener {
-            getImage.launch("image/*")
+            getImage.launch(
+                androidx.activity.result.PickVisualMediaRequest(
+                    ActivityResultContracts.PickVisualMedia.ImageOnly
+                )
+            )
         }
 
         btnAddSticker.setOnClickListener {
-            showEmojiCategoryDialog(tvSelectedSticker)
+            showEmojiCategoryDialog()
         }
 
         btnDone.setOnClickListener {
@@ -85,18 +129,32 @@ class WriteActivity : AppCompatActivity() {
             val sdf = SimpleDateFormat("M월 d일", Locale.KOREA)
             val today = sdf.format(Date())
             val imageUriString = representativeImageUri?.toString()
+            val stickerDataString = placedStickers.joinToString(",") { "${it.emoji}:${it.x}:${it.y}" }
 
             val dbHelper = DiaryDbHelper(this)
-            dbHelper.insertDiary(
-                today, title, content,
-                currentWeather?.icon,
-                currentWeather?.let { "${it.temp}°C" },
-                currentWeather?.description,
-                imageUriString,
-                selectedSticker
-            )
 
-            Toast.makeText(this, "일기가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+            if (editDiaryId != -1) {
+                dbHelper.updateDiary(
+                    editDiaryId, today, title, content,
+                    currentWeather?.icon,
+                    currentWeather?.let { "${it.temp}°C" },
+                    currentWeather?.description,
+                    imageUriString,
+                    stickerDataString
+                )
+                Toast.makeText(this, "일기가 수정되었습니다.", Toast.LENGTH_SHORT).show()
+            } else {
+                dbHelper.insertDiary(
+                    today, title, content,
+                    currentWeather?.icon,
+                    currentWeather?.let { "${it.temp}°C" },
+                    currentWeather?.description,
+                    imageUriString,
+                    stickerDataString
+                )
+                Toast.makeText(this, "일기가 저장되었습니다.", Toast.LENGTH_SHORT).show()
+            }
+
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
@@ -211,19 +269,82 @@ class WriteActivity : AppCompatActivity() {
             photoContainer.addView(frameLayout)
         }
     }
+    private fun copyImageToInternalStorage(uri: Uri): Uri {
+        val inputStream = contentResolver.openInputStream(uri)
+        val fileName = "diary_img_${System.currentTimeMillis()}.jpg"
+        val file = java.io.File(filesDir, fileName)
+        val outputStream = java.io.FileOutputStream(file)
 
-    private fun showEmojiCategoryDialog(tvSelectedSticker: TextView) {
+        inputStream?.copyTo(outputStream)
+        inputStream?.close()
+        outputStream.close()
+
+        return Uri.fromFile(file)
+    }
+
+    // 스티커 하나를 캔버스에 새로 추가 (선택했을 때)
+    private fun addStickerToCanvas(emoji: String) {
+        val placed = PlacedSticker(emoji, 100f, 100f)
+        placedStickers.add(placed)
+        drawStickerView(placed)
+    }
+
+    // 스티커 뷰를 캔버스에 실제로 그리고 드래그/삭제 리스너 연결
+    private fun drawStickerView(placed: PlacedSticker) {
+        val stickerView = TextView(this).apply {
+            text = placed.emoji
+            textSize = 32f
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            )
+            x = placed.x
+            y = placed.y
+        }
+
+        var dX = 0f
+        var dY = 0f
+
+        stickerView.setOnTouchListener { view, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    dX = view.x - event.rawX
+                    dY = view.y - event.rawY
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    view.x = event.rawX + dX
+                    view.y = event.rawY + dY
+                    placed.x = view.x
+                    placed.y = view.y
+                    true
+                }
+                else -> false
+            }
+        }
+
+        stickerView.setOnLongClickListener {
+            placedStickers.remove(placed)
+            stickerCanvas.removeView(stickerView)
+            Toast.makeText(this, "스티커가 삭제되었습니다.", Toast.LENGTH_SHORT).show()
+            true
+        }
+
+        stickerCanvas.addView(stickerView)
+    }
+
+    private fun showEmojiCategoryDialog() {
         val categories = arrayOf("😀 감정 / 표정", "☀️ 날씨 / 자연", "🎉 일상 / 활동", "🍔 음식 / 카페", "❤️ 하트 / 기타")
 
         AlertDialog.Builder(this)
             .setTitle("스티커 카테고리 선택")
             .setItems(categories) { _, which ->
-                showEmojiListDialog(which, tvSelectedSticker)
+                showEmojiListDialog(which)
             }
             .show()
     }
 
-    private fun showEmojiListDialog(categoryIndex: Int, tvSelectedSticker: TextView) {
+    private fun showEmojiListDialog(categoryIndex: Int) {
         val emojiMap = listOf(
             arrayOf("😀", "😃", "😄", "😁", "😆", "🥹", "😅", "😂", "🤣", "😊", "😇", "🙂", "🙃", "😉", "😌", "😍", "🥰", "😘", "😋", "😛", "😜", "🤪", "🤨", "🧐", "🤓", "😎", "🥳", "😏", "😒", "😞", "😔", "😟", "😕", "🙁", "😣", "😖", "😫", "😩", "🥺", "😢", "😭"),
             arrayOf("☀️", "🌤️", "⛅", "🌥️", "☁️", "🌧️", "⛈️", "🌩️", "❄️", "☃️", "💨", "🌊", "🌈", "⭐", "🌟", "✨", "🌙", "🔥", "🌸", "🌷", "🌹", "🌻", "🍀"),
@@ -237,12 +358,10 @@ class WriteActivity : AppCompatActivity() {
         AlertDialog.Builder(this)
             .setTitle("스티커 선택")
             .setItems(selectedList) { _, which ->
-                selectedSticker = selectedList[which]
-                tvSelectedSticker.text = selectedSticker
-                tvSelectedSticker.visibility = View.VISIBLE
+                addStickerToCanvas(selectedList[which])
             }
             .setNegativeButton("뒤로가기") { _, _ ->
-                showEmojiCategoryDialog(tvSelectedSticker)
+                showEmojiCategoryDialog()
             }
             .show()
     }
