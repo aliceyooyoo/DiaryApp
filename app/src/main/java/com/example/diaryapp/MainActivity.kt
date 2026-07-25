@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         val btnWrite = findViewById<Button>(R.id.btnWrite)
         val btnCalendar = findViewById<Button>(R.id.btnCalendar)
         val btnMore = findViewById<TextView>(R.id.btnMore)
-        val btnSchedule = findViewById<TextView>(R.id.btnSchedule) // 학사일정 버튼
+        val btnSchedule = findViewById<TextView>(R.id.btnSchedule)
 
         btnWrite.setOnClickListener {
             startActivity(Intent(this, WriteActivity::class.java))
@@ -45,7 +45,6 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, DiaryListActivity::class.java))
         }
 
-        // 학사일정 링크 클릭 리스너 연결
         btnSchedule.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.swu.ac.kr/swu/927/subview.do"))
             startActivity(intent)
@@ -60,7 +59,6 @@ class MainActivity : AppCompatActivity() {
         val today = sdf.format(Date())
         tvGreeting.text = "$today\n오늘 하루는 어땠나요?"
 
-        // TODO: 나중에 C가 만든 실제 GPS 좌표로 교체 (지금은 서울 좌표로 임시 고정)
         this.fetchWeather(37.5665, 126.9780) { result ->
             findViewById<TextView>(R.id.tvTemp).text = "${result.temp}°C"
             findViewById<TextView>(R.id.tvDescription).text = result.description
@@ -127,7 +125,17 @@ class MainActivity : AppCompatActivity() {
         card.layoutParams = cardParams
         card.setBackgroundColor(Color.WHITE)
 
-        // 대표 사진 렌더링
+        card.setOnClickListener {
+            val intent = Intent(this, DetailActivity::class.java).apply {
+                putExtra("date", diary.date)
+                putExtra("title", diary.title)
+                putExtra("content", diary.content)
+                putExtra("imageUri", diary.imageUri)
+                putExtra("sticker", diary.sticker) // 스티커 데이터 전달 추가 완료
+            }
+            startActivity(intent)
+        }
+
         val photoView = ImageView(this)
         val photoSize = (72 * dp).toInt()
         val photoParams = LinearLayout.LayoutParams(photoSize, photoSize)
@@ -137,7 +145,12 @@ class MainActivity : AppCompatActivity() {
 
         if (!diary.imageUri.isNullOrEmpty()) {
             try {
-                photoView.setImageURI(Uri.parse(diary.imageUri))
+                val firstUriStr = diary.imageUri.split(",").map { it.trim() }.firstOrNull { it.isNotEmpty() }
+                if (!firstUriStr.isNullOrEmpty()) {
+                    photoView.setImageURI(Uri.parse(firstUriStr))
+                } else {
+                    photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+                }
             } catch (e: Exception) {
                 photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
             }
