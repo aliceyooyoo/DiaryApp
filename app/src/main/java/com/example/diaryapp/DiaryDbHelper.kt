@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
 class DiaryDbHelper(context: Context) :
-    SQLiteOpenHelper(context, "diary.db", null, 6) {
+    SQLiteOpenHelper(context, "diary.db", null, 7) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -17,7 +17,8 @@ class DiaryDbHelper(context: Context) :
                 title TEXT,
                 content TEXT,
                 imageUri TEXT,
-                sticker TEXT
+                sticker TEXT,
+                place TEXT
             )
             """.trimIndent()
         )
@@ -28,7 +29,7 @@ class DiaryDbHelper(context: Context) :
         onCreate(db)
     }
 
-    fun insertDiary(date: String, title: String, content: String, imageUri: String, sticker: String) {
+    fun insertDiary(date: String, title: String, content: String, imageUri: String, sticker: String, place: String) {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("date", date)
@@ -36,6 +37,7 @@ class DiaryDbHelper(context: Context) :
             put("content", content)
             put("imageUri", imageUri)
             put("sticker", sticker)
+            put("place", place)
         }
         db.insert("diary", null, values)
         db.close()
@@ -71,11 +73,65 @@ class DiaryDbHelper(context: Context) :
             val imageUri = cursor.getString(cursor.getColumnIndexOrThrow("imageUri"))
             val stickerIndex = cursor.getColumnIndex("sticker")
             val sticker = if (stickerIndex != -1) cursor.getString(stickerIndex) ?: "" else ""
+            val place = cursor.getString(cursor.getColumnIndexOrThrow("place"))
 
-            list.add(Diary(date, title, content, imageUri, sticker))
+            list.add(Diary(date, title, content, imageUri, sticker, place))
         }
         cursor.close()
         db.close()
+        return list
+    }
+    fun getDiariesByDate(date: String): List<Diary> {
+
+        val list = mutableListOf<Diary>()
+
+        val db = readableDatabase
+
+        val cursor = db.query(
+            "diary",
+            null,
+            "date = ?",
+            arrayOf(date),
+            null,
+            null,
+            "id DESC"
+        )
+
+        while (cursor.moveToNext()) {
+
+            val title =
+                cursor.getString(cursor.getColumnIndexOrThrow("title"))
+
+            val content =
+                cursor.getString(cursor.getColumnIndexOrThrow("content"))
+
+            val imageUri =
+                cursor.getString(cursor.getColumnIndexOrThrow("imageUri"))
+
+            val sticker =
+                cursor.getString(cursor.getColumnIndexOrThrow("sticker"))
+            val placeIndex = cursor.getColumnIndex("place")
+            val place = if (placeIndex != -1) {
+                cursor.getString(placeIndex) ?: ""
+            } else {
+                ""
+            }
+
+            list.add(
+                Diary(
+                    date,
+                    title,
+                    content,
+                    imageUri,
+                    sticker,
+                    place
+                )
+            )
+        }
+
+        cursor.close()
+        db.close()
+
         return list
     }
 }

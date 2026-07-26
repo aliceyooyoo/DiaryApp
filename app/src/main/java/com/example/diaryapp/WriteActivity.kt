@@ -17,33 +17,69 @@ import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.app.Activity.RESULT_OK
 
 class WriteActivity : AppCompatActivity() {
 
     private val photoList = mutableListOf<Uri>()
     private lateinit var photoContainer: LinearLayout
+    private lateinit var tvPlace: TextView
     private var representativeImageUri: Uri? = null
+    private var selected = ""
 
     private var isEditMode = false
     private var originalTitle = ""
     private var originalDate = ""
+    private var selectedPlace = ""
+    private var placeLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 
-    private val getImage = registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
-        if (uris.isNotEmpty()) {
-            for (uri in uris) {
-                try {
-                    contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                } catch (e: Exception) {
-                    e.printStackTrace()
+            if (result.resultCode == RESULT_OK) {
+
+                val place = result.data?.getStringExtra("place")
+
+                if (place != null) {
+                    selectedPlace = place
+                    tvPlace.text = "📍 $selectedPlace"
                 }
             }
+        }
 
-            photoList.clear()
-            photoList.addAll(uris)
-            if (representativeImageUri == null || !photoList.contains(representativeImageUri)) {
-                representativeImageUri = photoList.firstOrNull()
+    private val getImage =
+        registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+            if (uris.isNotEmpty()) {
+                for (uri in uris) {
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+
+                photoList.clear()
+                photoList.addAll(uris)
+                if (representativeImageUri == null || !photoList.contains(representativeImageUri)) {
+                    representativeImageUri = photoList.firstOrNull()
+                }
+                updatePhotoListUI()
             }
-            updatePhotoListUI()
+        }
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?
+    ) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == 100 && resultCode == RESULT_OK) {
+
+            selectedPlace = data?.getStringExtra("place") ?: ""
+
+            tvPlace.text = "📍 $selectedPlace"
         }
     }
 
@@ -58,7 +94,10 @@ class WriteActivity : AppCompatActivity() {
 
         val btnAddPhoto = findViewById<TextView>(R.id.btnAddPhoto)
         val btnAddSticker = findViewById<TextView>(R.id.btnAddSticker)
+        val btnLocation = findViewById<TextView>(R.id.btnLocation)
         val tvSelectedSticker = findViewById<TextView>(R.id.tvSelectedSticker)
+
+        tvPlace = findViewById(R.id.tvPlace)
 
         photoContainer = findViewById(R.id.photoContainer)
 
@@ -76,10 +115,16 @@ class WriteActivity : AppCompatActivity() {
                 tvSelectedSticker.text = stickerStr
                 tvSelectedSticker.visibility = View.VISIBLE
             }
+            Toast.makeText(
+                this,
+                "저장 장소: $selectedPlace",
+                Toast.LENGTH_SHORT
+            ).show()
 
             val imageUriStr = intent.getStringExtra("edit_imageUri") ?: ""
             if (imageUriStr.isNotEmpty()) {
-                val uris = imageUriStr.split(",").map { Uri.parse(it.trim()) }.filter { it.toString().isNotEmpty() }
+                val uris = imageUriStr.split(",").map { Uri.parse(it.trim()) }
+                    .filter { it.toString().isNotEmpty() }
                 photoList.addAll(uris)
                 if (photoList.isNotEmpty()) {
                     representativeImageUri = photoList[0]
@@ -98,6 +143,11 @@ class WriteActivity : AppCompatActivity() {
 
         btnAddSticker.setOnClickListener {
             showEmojiCategoryDialog(tvSelectedSticker)
+        }
+
+        btnLocation.setOnClickListener {
+            val intent = Intent(this, PlaceSearchActivity::class.java)
+            placeLauncher.launch(intent)
         }
 
         btnDone.setOnClickListener {
@@ -135,10 +185,24 @@ class WriteActivity : AppCompatActivity() {
             val imageUriString = finalUris.joinToString(",") { it.toString() }
 
             if (isEditMode) {
-                dbHelper.updateDiary(originalTitle, originalDate, title, content, imageUriString, sticker)
+                dbHelper.updateDiary(
+                    originalTitle,
+                    originalDate,
+                    title,
+                    content,
+                    imageUriString,
+                    sticker
+                )
                 Toast.makeText(this, "일기가 수정되었습니다.", Toast.LENGTH_SHORT).show()
             } else {
-                dbHelper.insertDiary(date = today, title = title, content = content, imageUri = imageUriString, sticker = sticker)
+                dbHelper.insertDiary(
+                    date = today,
+                    title = title,
+                    content = content,
+                    imageUri = imageUriString,
+                    sticker = sticker,
+                    place = selectedPlace
+                )
                 Toast.makeText(this, "일기가 작성되었습니다.", Toast.LENGTH_SHORT).show()
             }
 
@@ -221,6 +285,7 @@ class WriteActivity : AppCompatActivity() {
                         )
                         showEmojiPicker(tvSelectedSticker, emotions)
                     }
+
                     1 -> {
                         val weathers = arrayOf(
                             "☀️", "🌤️", "⛅", "🌥️", "☁️", "🌦️", "🌧️",
@@ -229,6 +294,7 @@ class WriteActivity : AppCompatActivity() {
                         )
                         showEmojiPicker(tvSelectedSticker, weathers)
                     }
+
                     2 -> {
                         val realAnimals = arrayOf(
                             "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼",
@@ -238,6 +304,7 @@ class WriteActivity : AppCompatActivity() {
                         )
                         showEmojiPicker(tvSelectedSticker, realAnimals)
                     }
+
                     3 -> {
                         val realFoods = arrayOf(
                             "🍎", "🍌", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍",
@@ -266,4 +333,5 @@ class WriteActivity : AppCompatActivity() {
             }
             .show()
     }
+
 }

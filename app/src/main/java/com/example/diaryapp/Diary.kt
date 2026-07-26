@@ -5,5 +5,6 @@ data class Diary(
     val title: String,
     val content: String,
     val imageUri: String,
-    val sticker: String
+    val sticker: String,
+    val place: String
 )
