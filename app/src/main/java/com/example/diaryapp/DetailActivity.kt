@@ -6,12 +6,14 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONArray
 
 class DetailActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,12 +21,13 @@ class DetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_detail)
 
         val tvDate = findViewById<TextView>(R.id.tvDetailDate)
-        val tvSticker = findViewById<TextView>(R.id.tvDetailSticker)
         val tvTitle = findViewById<TextView>(R.id.tvDetailTitle)
         val tvContent = findViewById<TextView>(R.id.tvDetailContent)
         val ivRepresentative = findViewById<ImageView>(R.id.ivRepresentativePhoto)
         val subPhotoContainer = findViewById<LinearLayout>(R.id.subPhotoContainer)
+        val stickerOverlay = findViewById<FrameLayout>(R.id.stickerOverlay)
 
+        val btnBack = findViewById<TextView>(R.id.btnBack)
         val btnEdit = findViewById<TextView>(R.id.btnEdit)
         val btnDelete = findViewById<TextView>(R.id.btnDelete)
 
@@ -38,11 +41,44 @@ class DetailActivity : AppCompatActivity() {
         tvTitle.text = title
         tvContent.text = content
 
+        btnBack.setOnClickListener { finish() }
+
+        // 스티커를 저장된 위치 그대로 오버레이에 복원
         if (sticker.isNotEmpty()) {
-            tvSticker.text = sticker
-            tvSticker.visibility = View.VISIBLE
-        } else {
-            tvSticker.visibility = View.GONE
+            try {
+                val arr = JSONArray(sticker)
+                for (i in 0 until arr.length()) {
+                    val obj = arr.getJSONObject(i)
+                    val stickerView = TextView(this).apply {
+                        text = obj.getString("emoji")
+                        textSize = 32f
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        x = obj.getDouble("x").toFloat()
+                        y = obj.getDouble("y").toFloat()
+                    }
+                    stickerOverlay.addView(stickerView)
+                }
+            } catch (e: Exception) {
+                // 예전 방식(이모지 문자열만 저장된 데이터) 호환: 왼쪽 위부터 순서대로 표시
+                var offset = 0
+                for (emoji in sticker) {
+                    val stickerView = TextView(this).apply {
+                        text = emoji.toString()
+                        textSize = 32f
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        x = (40 + offset * 60).toFloat()
+                        y = 8f
+                    }
+                    stickerOverlay.addView(stickerView)
+                    offset++
+                }
+            }
         }
 
         // 진짜 수정 버튼 연결 (데이터를 들고 WriteActivity로 이동)
@@ -96,15 +132,14 @@ class DetailActivity : AppCompatActivity() {
                     ivRepresentative.visibility = View.GONE
                 }
 
-                // 대표 사진을 제외한 서브 사진들이 가로 폭을 정확히 채우도록 동적 배치
                 if (uris.size > 1) {
                     ivRepresentative.post {
-                        val totalWidth = ivRepresentative.width // 대표 사진의 현재 가로 폭
+                        val totalWidth = ivRepresentative.width
                         val subUris = uris.subList(1, uris.size)
-                        val spacing = (8 * resources.displayMetrics.density).toInt() // 사진 사이 간격 8dp
+                        val spacing = (8 * resources.displayMetrics.density).toInt()
                         val totalSpacing = spacing * (subUris.size - 1)
-                        val eachWidth = (totalWidth - totalSpacing) / subUris.size // 개수에 따라 가로 폭 균등 분할
-                        val eachHeight = (80 * resources.displayMetrics.density).toInt() // 높이 고정
+                        val eachWidth = (totalWidth - totalSpacing) / subUris.size
+                        val eachHeight = (80 * resources.displayMetrics.density).toInt()
 
                         subPhotoContainer.removeAllViews()
                         for (i in subUris.indices) {

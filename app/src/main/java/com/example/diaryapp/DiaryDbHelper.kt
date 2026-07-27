@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
 class DiaryDbHelper(context: Context) :
-    SQLiteOpenHelper(context, "diary.db", null, 7) {
+    SQLiteOpenHelper(context, "diary.db", null, 8) {  // 버전 7 → 8
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -18,7 +18,9 @@ class DiaryDbHelper(context: Context) :
                 content TEXT,
                 imageUri TEXT,
                 sticker TEXT,
-                place TEXT
+                place TEXT,
+                weatherTemp TEXT,
+                weatherDesc TEXT
             )
             """.trimIndent()
         )
@@ -29,7 +31,11 @@ class DiaryDbHelper(context: Context) :
         onCreate(db)
     }
 
-    fun insertDiary(date: String, title: String, content: String, imageUri: String, sticker: String, place: String) {
+    fun insertDiary(
+        date: String, title: String, content: String,
+        imageUri: String, sticker: String, place: String,
+        weatherTemp: String? = null, weatherDesc: String? = null
+    ) {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("date", date)
@@ -38,12 +44,13 @@ class DiaryDbHelper(context: Context) :
             put("imageUri", imageUri)
             put("sticker", sticker)
             put("place", place)
+            put("weatherTemp", weatherTemp)
+            put("weatherDesc", weatherDesc)
         }
         db.insert("diary", null, values)
         db.close()
     }
 
-    // 기존 일기 수정을 위한 함수 추가
     fun updateDiary(oldTitle: String, oldDate: String, newTitle: String, newContent: String, newImageUri: String, newSticker: String) {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -67,6 +74,7 @@ class DiaryDbHelper(context: Context) :
         val db = readableDatabase
         val cursor = db.query("diary", null, null, null, null, null, "id DESC")
         while (cursor.moveToNext()) {
+            val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
             val date = cursor.getString(cursor.getColumnIndexOrThrow("date"))
             val title = cursor.getString(cursor.getColumnIndexOrThrow("title"))
             val content = cursor.getString(cursor.getColumnIndexOrThrow("content"))
@@ -74,64 +82,40 @@ class DiaryDbHelper(context: Context) :
             val stickerIndex = cursor.getColumnIndex("sticker")
             val sticker = if (stickerIndex != -1) cursor.getString(stickerIndex) ?: "" else ""
             val place = cursor.getString(cursor.getColumnIndexOrThrow("place"))
+            val weatherTempIndex = cursor.getColumnIndex("weatherTemp")
+            val weatherTemp = if (weatherTempIndex != -1) cursor.getString(weatherTempIndex) else null
+            val weatherDescIndex = cursor.getColumnIndex("weatherDesc")
+            val weatherDesc = if (weatherDescIndex != -1) cursor.getString(weatherDescIndex) else null
 
-            list.add(Diary(date, title, content, imageUri, sticker, place))
+            list.add(Diary(id, date, title, content, imageUri, sticker, place, weatherTemp, weatherDesc))
         }
         cursor.close()
         db.close()
         return list
     }
+
     fun getDiariesByDate(date: String): List<Diary> {
-
         val list = mutableListOf<Diary>()
-
         val db = readableDatabase
-
-        val cursor = db.query(
-            "diary",
-            null,
-            "date = ?",
-            arrayOf(date),
-            null,
-            null,
-            "id DESC"
-        )
+        val cursor = db.query("diary", null, "date = ?", arrayOf(date), null, null, "id DESC")
 
         while (cursor.moveToNext()) {
-
-            val title =
-                cursor.getString(cursor.getColumnIndexOrThrow("title"))
-
-            val content =
-                cursor.getString(cursor.getColumnIndexOrThrow("content"))
-
-            val imageUri =
-                cursor.getString(cursor.getColumnIndexOrThrow("imageUri"))
-
-            val sticker =
-                cursor.getString(cursor.getColumnIndexOrThrow("sticker"))
+            val id = cursor.getInt(cursor.getColumnIndexOrThrow("id"))
+            val title = cursor.getString(cursor.getColumnIndexOrThrow("title"))
+            val content = cursor.getString(cursor.getColumnIndexOrThrow("content"))
+            val imageUri = cursor.getString(cursor.getColumnIndexOrThrow("imageUri"))
+            val sticker = cursor.getString(cursor.getColumnIndexOrThrow("sticker"))
             val placeIndex = cursor.getColumnIndex("place")
-            val place = if (placeIndex != -1) {
-                cursor.getString(placeIndex) ?: ""
-            } else {
-                ""
-            }
+            val place = if (placeIndex != -1) cursor.getString(placeIndex) ?: "" else ""
+            val weatherTempIndex = cursor.getColumnIndex("weatherTemp")
+            val weatherTemp = if (weatherTempIndex != -1) cursor.getString(weatherTempIndex) else null
+            val weatherDescIndex = cursor.getColumnIndex("weatherDesc")
+            val weatherDesc = if (weatherDescIndex != -1) cursor.getString(weatherDescIndex) else null
 
-            list.add(
-                Diary(
-                    date,
-                    title,
-                    content,
-                    imageUri,
-                    sticker,
-                    place
-                )
-            )
+            list.add(Diary(id, date, title, content, imageUri, sticker, place, weatherTemp, weatherDesc))
         }
-
         cursor.close()
         db.close()
-
         return list
     }
 }

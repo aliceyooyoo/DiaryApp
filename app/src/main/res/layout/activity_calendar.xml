@@ -18,29 +18,33 @@
         android:gravity="center"
         android:orientation="horizontal">
 
-
-
-        <Button
+        <TextView
             android:id="@+id/btnPreviousMonth"
-            android:layout_width="50dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="&lt;" />
+            android:padding="8dp"
+            android:text="〈"
+            android:textSize="20sp"
+            android:textColor="#000000" />
 
         <TextView
             android:id="@+id/tvMonthYear"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:gravity="center"
             android:text="2026년 7월"
             android:textSize="20sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:textColor="#000000" />
 
-        <Button
+        <TextView
             android:id="@+id/btnNextMonth"
-            android:layout_width="50dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="&gt;" />
+            android:padding="8dp"
+            android:text="〉"
+            android:textSize="20sp"
+            android:textColor="#000000" />
 
     </LinearLayout>
 
