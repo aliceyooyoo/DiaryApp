@@ -1,6 +1,5 @@
 package com.example.diaryapp
 
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import android.widget.GridLayout
@@ -23,6 +22,7 @@ class CalendarActivity : AppCompatActivity() {
     private lateinit var btnNextMonth: Button
     private lateinit var tvSelectedDate: TextView
     private lateinit var postContainer: LinearLayout
+    private lateinit var dbHelper: DiaryDbHelper
 
     // 현재 보여주는 달
     private val currentCalendar = Calendar.getInstance()
@@ -30,11 +30,16 @@ class CalendarActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
+        // activity_main.xml 연결
         setContentView(R.layout.activity_calendar)
-        val btnHome = findViewById<Button>(R.id.btnHome)
-        val btnWrite = findViewById<Button>(R.id.btnWrite)
-        val btnCalendar = findViewById<Button>(R.id.btnCalendar)
+
+        val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.toolbar)
+
+        setSupportActionBar(toolbar)
+
+        supportActionBar?.title = "캘린더"
+
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // XML에 만든 화면 요소 연결
         calendarGrid = findViewById(R.id.calendarGrid)
@@ -44,6 +49,7 @@ class CalendarActivity : AppCompatActivity() {
         tvSelectedDate = findViewById(R.id.tvSelectedDate)
         tvSelectedDate.gravity = android.view.Gravity.START
         postContainer = findViewById(R.id.postContainer)
+        dbHelper = DiaryDbHelper(this)
 
         // 처음 캘린더 표시
         updateCalendar()
@@ -59,17 +65,11 @@ class CalendarActivity : AppCompatActivity() {
             currentCalendar.add(Calendar.MONTH, 1)
             updateCalendar()
         }
-        btnHome.setOnClickListener {
-            startActivity(Intent(this, MainActivity::class.java))
-        }
+    }
 
-        btnWrite.setOnClickListener {
-            startActivity(Intent(this, WriteActivity::class.java))
-        }
-
-        btnCalendar.setOnClickListener {
-            // 현재 캘린더 화면이므로 아무 동작 안 함
-        }
+    override fun onSupportNavigateUp(): Boolean {
+        finish()
+        return true
     }
 
     private fun updateCalendar() {
@@ -134,227 +134,104 @@ class CalendarActivity : AppCompatActivity() {
             height = 80
             columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f)
         }
-
         textView.setOnClickListener {
-            tvSelectedDate.text = "${currentCalendar.get(Calendar.MONTH)+1}월 ${day}일"
-            postContainer.removeAllViewsInLayout()
-            // =========================
-// 일기 카드 생성
-// =========================
 
-            // =========================
-// 일기 카드 생성
-// =========================
+            val selectedDate =
+                "${currentCalendar.get(Calendar.MONTH) + 1}월 ${day}일"
 
-            val diaryCard = LinearLayout(this)
-            diaryCard.orientation = LinearLayout.VERTICAL
 
-// 카드 안쪽 여백
-            diaryCard.setPadding(
-                30,
-                30,
-                30,
-                30
-            )
+            tvSelectedDate.text = selectedDate
 
-// 카드 크기 + 카드 사이 간격
-            val cardParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
 
-            cardParams.bottomMargin = 25
-            diaryCard.layoutParams = cardParams
+            postContainer.removeAllViews()
 
 
-// =========================
-// 카드 배경 (흰색)
-// =========================
+            val diaries = dbHelper.getDiariesByDate(selectedDate)
 
-            val cardBackground = GradientDrawable()
 
-            cardBackground.setColor(Color.WHITE)
-            cardBackground.cornerRadius = 12f
+            if (diaries.isEmpty()) {
 
-            diaryCard.background = cardBackground
+                val emptyText = TextView(this)
 
+                emptyText.text = "작성한 일기가 없습니다."
+                emptyText.textSize = 16f
 
-// =========================
-// 왼쪽 사진 + 오른쪽 내용
-// =========================
+                postContainer.addView(emptyText)
 
-            val mainLayout = LinearLayout(this)
-            mainLayout.orientation = LinearLayout.HORIZONTAL
+            } else {
 
+                for (diary in diaries) {
+                    val diarycard = LinearLayout(this)
 
-// -------------------------
-// 왼쪽 사진
-// -------------------------
+                    val title = TextView(this)
+                    title.text = "📖 ${diary.title}"
+                    title.textSize = 20f
 
-            val photo = TextView(this)
 
-            photo.text = "사진"
-            photo.textSize = 14f
-            photo.gravity = Gravity.CENTER
+                    val content = TextView(this)
+                    content.text = if (diary.content.length > 30) {
+                        diary.content.substring(0, 30) + "..."
+                    } else {
+                        diary.content
+                    }
+                    content.textSize = 16f
 
-            val photoParams = LinearLayout.LayoutParams(
-                120,
-                200
-            )
+                    val location = TextView(this)
 
-            photo.layoutParams = photoParams
+                    location.text = "📍 ${diary.place}"
+                    location.textSize = 14f
 
 
-// -------------------------
-// 오른쪽 내용
-// -------------------------
+                    val sticker = TextView(this)
 
-            val textLayout = LinearLayout(this)
+                    sticker.text = diary.sticker
+                    sticker.textSize = 25f
 
-            textLayout.orientation = LinearLayout.VERTICAL
+                    val titleParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    titleParams.bottomMargin = 20
 
-            val textParams = LinearLayout.LayoutParams(
-                0,
-                200
-            )
 
-            textParams.weight = 1f
-            textParams.leftMargin = 25
+                    val contentParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    contentParams.bottomMargin = 20
 
-            textLayout.layoutParams = textParams
 
+                    val locationParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    locationParams.bottomMargin = 20
 
-// -------------------------
-// 제목
-// -------------------------
 
-            val title = TextView(this)
+                    diarycard.addView(title)
 
-            title.text = "오늘의 일기"
-            title.textSize = 20f
-            title.gravity = Gravity.START
+                    val gap1 = TextView(this)
+                    gap1.height = 20
+                    diarycard.addView(gap1)
 
-            textLayout.addView(title)
+                    diarycard.addView(content)
 
+                    val gap2 = TextView(this)
+                    gap2.height = 20
+                    diarycard.addView(gap2)
 
-// -------------------------
-// 제목과 본문 사이 여백
-// -------------------------
+                    diarycard.addView(location)
 
-            val titleGap = TextView(this)
+                    val gap3 = TextView(this)
+                    gap3.height = 20
+                    diarycard.addView(gap3)
 
-            titleGap.text = ""
+                    diarycard.addView(sticker)
 
-            val titleGapParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                25
-            )
-
-            textLayout.addView(
-                titleGap,
-                titleGapParams
-            )
-
-
-// -------------------------
-// 본문
-// -------------------------
-
-            val content = TextView(this)
-
-            content.text = "오늘 하루는 정말 즐거웠다."
-            content.textSize = 16f
-            content.gravity = Gravity.START
-
-            textLayout.addView(content)
-
-
-// -------------------------
-// 본문과 장소/날씨 사이 여백
-// -------------------------
-
-            val contentGap = TextView(this)
-
-            contentGap.text = ""
-
-            val contentGapParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                50
-            )
-
-            textLayout.addView(
-                contentGap,
-                contentGapParams
-            )
-
-
-// -------------------------
-// 장소 + 날씨
-// -------------------------
-
-            val infoLayout = LinearLayout(this)
-
-            infoLayout.orientation = LinearLayout.HORIZONTAL
-
-
-// 장소
-            val location = TextView(this)
-
-            location.text = "◎ 홍대"
-            location.textSize = 14f
-
-
-// 날씨
-            val weather = TextView(this)
-
-            weather.text = "날씨 맑음"
-            weather.textSize = 14f
-            weather.gravity = Gravity.END
-
-
-            val weatherParams = LinearLayout.LayoutParams(
-                0,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-            )
-
-            weatherParams.weight = 1f
-
-
-// 장소 + 날씨 배치
-            infoLayout.addView(location)
-
-            infoLayout.addView(
-                weather,
-                weatherParams
-            )
-
-
-// 오른쪽 영역에 장소 + 날씨 추가
-            textLayout.addView(infoLayout)
-
-
-// -------------------------
-// 사진 + 오른쪽 내용 합치기
-// -------------------------
-
-            mainLayout.addView(photo)
-            mainLayout.addView(textLayout)
-
-
-// -------------------------
-// 카드에 추가
-// -------------------------
-
-            diaryCard.addView(mainLayout)
-
-
-// -------------------------
-// 화면에 카드 표시
-// -------------------------
-
-            postContainer.addView(diaryCard)
+                    postContainer.addView(diarycard)
+                }
+            }
         }
-
         calendarGrid.addView(textView)
     }
 }

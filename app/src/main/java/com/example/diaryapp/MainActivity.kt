@@ -1,12 +1,14 @@
 package com.example.diaryapp
 
+import com.example.diaryapp.DiaryDbHelper
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.icu.text.SimpleDateFormat
 import android.net.Uri
+import android.icu.text.SimpleDateFormat
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -31,11 +33,6 @@ class MainActivity : AppCompatActivity() {
         val btnMore = findViewById<TextView>(R.id.btnMore)
         val btnSchedule = findViewById<TextView>(R.id.btnSchedule)
 
-        btnSchedule.setOnClickListener {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.swu.ac.kr/swu/927/subview.do"))
-            startActivity(intent)
-        }
-
         btnWrite.setOnClickListener {
             startActivity(Intent(this, WriteActivity::class.java))
         }
@@ -47,6 +44,11 @@ class MainActivity : AppCompatActivity() {
         btnMore.setOnClickListener {
             startActivity(Intent(this, DiaryListActivity::class.java))
         }
+
+        btnSchedule.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.swu.ac.kr/swu/927/subview.do"))
+            startActivity(intent)
+        }
     }
 
     override fun onResume() {
@@ -57,8 +59,7 @@ class MainActivity : AppCompatActivity() {
         val today = sdf.format(Date())
         tvGreeting.text = "$today\n오늘 하루는 어땠나요?"
 
-        // TODO: 나중에 C가 만든 실제 GPS 좌표로 교체 (지금은 서울 좌표로 임시 고정)
-        fetchWeather(37.5665, 126.9780) { result ->
+        this.fetchWeather(37.5665, 126.9780) { result ->
             findViewById<TextView>(R.id.tvTemp).text = "${result.temp}°C"
             findViewById<TextView>(R.id.tvDescription).text = result.description
             findViewById<TextView>(R.id.tvTempMaxMin).text = "최고 ${result.tempMax}° / 최저 ${result.tempMin}°"
@@ -109,28 +110,6 @@ class MainActivity : AppCompatActivity() {
         }.start()
     }
 
-    private fun loadImageSafely(imageView: ImageView, uriString: String?) {
-        if (uriString.isNullOrEmpty()) {
-            imageView.setImageDrawable(null)
-            imageView.setBackgroundColor(Color.parseColor("#D9D9D9"))
-            return
-        }
-        try {
-            val uri = Uri.parse(uriString)
-            val inputStream = contentResolver.openInputStream(uri)
-            val bitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
-            if (bitmap != null) {
-                imageView.setImageBitmap(bitmap)
-            } else {
-                imageView.setBackgroundColor(Color.parseColor("#D9D9D9"))
-            }
-        } catch (e: Exception) {
-            imageView.setImageDrawable(null)
-            imageView.setBackgroundColor(Color.parseColor("#D9D9D9"))
-        }
-    }
-
     private fun createDiaryCard(diary: Diary): LinearLayout {
         val dp = resources.displayMetrics.density
 
@@ -147,8 +126,13 @@ class MainActivity : AppCompatActivity() {
         card.setBackgroundColor(Color.WHITE)
 
         card.setOnClickListener {
-            val intent = Intent(this, DetailActivity::class.java)
-            intent.putExtra("diaryId", diary.id)
+            val intent = Intent(this, DetailActivity::class.java).apply {
+                putExtra("date", diary.date)
+                putExtra("title", diary.title)
+                putExtra("content", diary.content)
+                putExtra("imageUri", diary.imageUri)
+                putExtra("sticker", diary.sticker) // 스티커 데이터 전달 추가 완료
+            }
             startActivity(intent)
         }
 
@@ -158,7 +142,21 @@ class MainActivity : AppCompatActivity() {
         photoParams.setMargins(0, 0, (16 * dp).toInt(), 0)
         photoView.layoutParams = photoParams
         photoView.scaleType = ImageView.ScaleType.CENTER_CROP
-        loadImageSafely(photoView, diary.imageUri)
+
+        if (!diary.imageUri.isNullOrEmpty()) {
+            try {
+                val firstUriStr = diary.imageUri.split(",").map { it.trim() }.firstOrNull { it.isNotEmpty() }
+                if (!firstUriStr.isNullOrEmpty()) {
+                    photoView.setImageURI(Uri.parse(firstUriStr))
+                } else {
+                    photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+                }
+            } catch (e: Exception) {
+                photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+            }
+        } else {
+            photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
+        }
 
         val right = LinearLayout(this)
         right.orientation = LinearLayout.VERTICAL
