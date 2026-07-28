@@ -8,6 +8,7 @@ data class Diary(
     val imageUri: String,
     val sticker: String,
     val place: String,
+    val weatherIcon: String? = null,
     val weatherTemp: String? = null,
     val weatherDesc: String? = null
 )

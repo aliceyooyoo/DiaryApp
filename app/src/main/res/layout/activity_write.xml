@@ -6,10 +6,11 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="40dp"
         android:background="#F8F9FA"
         android:orientation="vertical">
 
-        <!-- 상단 네비게이션바 (X, 날짜 이동, 완료) -->
+        <!-- 상단 네비게이션바 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="56dp"
@@ -26,46 +27,13 @@
                 android:textColor="#000000"
                 android:textSize="20sp" />
 
-            <LinearLayout
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/btnPrevDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="8dp"
-                    android:text="〈"
-                    android:textColor="#333333"
-                    android:textSize="16sp" />
-
-                <TextView
-                    android:id="@+id/tvDateTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:paddingHorizontal="12dp"
-                    android:text="7월 21일 (화)"
-                    android:textColor="#000000"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <TextView
-                    android:id="@+id/btnNextDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:padding="8dp"
-                    android:text="〉"
-                    android:textColor="#333333"
-                    android:textSize="16sp" />
-            </LinearLayout>
-
             <TextView
                 android:id="@+id/btnDone"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="end"
+                android:layout_weight="1"
+                android:gravity="end"
                 android:padding="8dp"
                 android:text="완료"
                 android:textColor="#000000"
@@ -84,7 +52,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- 상단 날씨 및 위치 정보 카드 (가로 정렬) -->
+                <!-- 날씨 + 장소 카드 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -94,7 +62,6 @@
                     android:orientation="horizontal"
                     android:padding="16dp">
 
-                    <!-- 왼쪽: 날씨 정보 -->
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
@@ -103,11 +70,11 @@
                         android:orientation="horizontal">
 
                         <ImageView
+                            android:id="@+id/ivWriteWeatherIcon"
                             android:layout_width="32dp"
                             android:layout_height="32dp"
                             android:layout_marginEnd="12dp"
-                            android:scaleType="centerInside"
-                            android:src="@drawable/ic_sun" />
+                            android:scaleType="centerInside" />
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -115,39 +82,38 @@
                             android:orientation="vertical">
 
                             <TextView
+                                android:id="@+id/tvWriteWeatherTemp"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="29℃"
                                 android:textColor="#000000"
                                 android:textSize="16sp"
                                 android:textStyle="bold" />
 
                             <TextView
+                                android:id="@+id/tvWriteWeatherDesc"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:text="구름 조금"
                                 android:textColor="#666666"
                                 android:textSize="12sp" />
                         </LinearLayout>
                     </LinearLayout>
 
-                    <!-- 오른쪽: 장소 선택 및 표시 뷰 -->
                     <TextView
                         android:id="@+id/tvPlace"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="#EFEBFA"
-                        android:maxWidth="160dp"
                         android:ellipsize="end"
                         android:maxLines="1"
+                        android:maxWidth="160dp"
                         android:paddingHorizontal="12dp"
                         android:paddingVertical="6dp"
-                        android:text="📍 장소 선택 ✕"
+                        android:text="📍 장소 선택"
                         android:textColor="#5C469C"
                         android:textSize="12sp" />
                 </LinearLayout>
 
-                <!-- 본문 작성 흰색 박스 컨테이너 -->
+                <!-- 본문 작성 흰색 박스 -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -155,46 +121,41 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- 제목과 오른쪽 구석 스티커 고정 영역 -->
-                    <LinearLayout
+                    <EditText
+                        android:id="@+id/etTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:paddingBottom="12dp">
+                        android:background="@null"
+                        android:hint="제목"
+                        android:paddingBottom="12dp"
+                        android:textColorHint="#999999"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <!-- 본문 + 스티커 캔버스가 겹치는 영역 -->
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp"
+                        android:layout_marginBottom="24dp">
 
                         <EditText
-                            android:id="@+id/etTitle"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
+                            android:id="@+id/etContent"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
                             android:background="@null"
-                            android:hint="제목"
+                            android:gravity="top"
+                            android:hint="본문"
                             android:textColorHint="#999999"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
+                            android:textSize="14sp" />
 
-                        <ImageView
-                            android:id="@+id/ivSelectedSticker"
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            android:layout_marginStart="8dp"
-                            android:scaleType="fitCenter"
-                            android:visibility="gone" />
-                    </LinearLayout>
+                        <FrameLayout
+                            android:id="@+id/stickerCanvas"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
 
-                    <EditText
-                        android:id="@+id/etContent"
-                        android:layout_width="match_parent"
-                        android:layout_height="180dp"
-                        android:layout_marginBottom="24dp"
-                        android:background="@null"
-                        android:gravity="top"
-                        android:hint="본문"
-                        android:textColorHint="#999999"
-                        android:textSize="14sp" />
+                    </FrameLayout>
 
-                    <!-- 첨부된 사진 가로 나열 영역 (스크롤) -->
+                    <!-- 첨부된 사진 가로 나열 -->
                     <HorizontalScrollView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -210,7 +171,7 @@
             </LinearLayout>
         </ScrollView>
 
-        <!-- 하단 탭바 (아이콘 제거, 텍스트만 배치) -->
+        <!-- 하단 탭바 -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="60dp"
@@ -228,12 +189,18 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_image" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:text="사진"
                     android:textColor="#5C469C"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -247,12 +214,18 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_sticker" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:text="스티커"
                     android:textColor="#5C469C"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -266,12 +239,18 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_place" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
                     android:text="장소"
                     android:textColor="#5C469C"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     android:textStyle="bold" />
             </LinearLayout>
 

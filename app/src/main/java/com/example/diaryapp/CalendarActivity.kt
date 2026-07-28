@@ -29,8 +29,8 @@ class CalendarActivity : AppCompatActivity() {
     private lateinit var dbHelper: DiaryDbHelper
 
     private lateinit var btnHomeTab: LinearLayout
-    private lateinit var btnWriteTab: LinearLayout
-    private lateinit var btnCalendarTab: LinearLayout
+    private lateinit var btnWrite: LinearLayout
+    private lateinit var btnCalendar: LinearLayout
 
     private val currentCalendar = Calendar.getInstance()
 
@@ -54,20 +54,20 @@ class CalendarActivity : AppCompatActivity() {
         dbHelper = DiaryDbHelper(this)
 
         btnHomeTab = findViewById(R.id.btnHomeTab)
-        btnWriteTab = findViewById(R.id.btnWriteTab)
-        btnCalendarTab = findViewById(R.id.btnCalendarTab)
+        btnWrite = findViewById(R.id.btnWrite)
+        btnCalendar = findViewById(R.id.btnCalendar)
 
         btnHomeTab.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
 
-        btnWriteTab.setOnClickListener {
+        btnWrite.setOnClickListener {
             startActivity(Intent(this, WriteActivity::class.java))
             finish()
         }
 
-        btnCalendarTab.setOnClickListener {
+        btnCalendar.setOnClickListener {
             // 현재 화면
         }
 

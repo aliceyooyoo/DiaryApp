@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -21,13 +22,12 @@ class DetailActivity : AppCompatActivity() {
         val tvTitle = findViewById<TextView>(R.id.tvDetailTitle)
         val tvContent = findViewById<TextView>(R.id.tvDetailContent)
         val tvDetailPlace = findViewById<TextView>(R.id.tvDetailPlace)
-        val ivDetailSticker = findViewById<ImageView>(R.id.ivDetailSticker)
+        val detailStickerCanvas = findViewById<FrameLayout>(R.id.detailStickerCanvas)
         val photoContainer = findViewById<LinearLayout>(R.id.photoContainer)
 
         val btnEdit = findViewById<TextView>(R.id.btnEdit)
         val btnDelete = findViewById<TextView>(R.id.btnDelete)
 
-        // 인텐트로 데이터 받기
         val date = intent.getStringExtra("date") ?: ""
         val title = intent.getStringExtra("title") ?: ""
         val content = intent.getStringExtra("content") ?: ""
@@ -39,7 +39,6 @@ class DetailActivity : AppCompatActivity() {
         tvTitle.text = title
         tvContent.text = content
 
-        // 장소가 있으면 표시, 없으면 숨기기
         if (place.isNotEmpty()) {
             tvDetailPlace.text = "📍 $place"
             tvDetailPlace.visibility = View.VISIBLE
@@ -47,21 +46,30 @@ class DetailActivity : AppCompatActivity() {
             tvDetailPlace.visibility = View.GONE
         }
 
-        // 제목 오른쪽 구석 스티커 표시
+        detailStickerCanvas.removeAllViews()
         if (sticker.isNotEmpty()) {
-            val stickerName = sticker.split(",")[0].split("@")[0]
-            val resId = resources.getIdentifier(stickerName, "drawable", packageName)
-            if (resId != 0) {
-                ivDetailSticker.setImageResource(resId)
-                ivDetailSticker.visibility = View.VISIBLE
-            } else {
-                ivDetailSticker.visibility = View.GONE
+            sticker.split(",").forEach { entry ->
+                val parts = entry.split(":")
+                if (parts.size == 3) {
+                    val emoji = parts[0]
+                    val x = parts[1].toFloatOrNull() ?: 0f
+                    val y = parts[2].toFloatOrNull() ?: 0f
+
+                    val stickerView = TextView(this).apply {
+                        text = emoji
+                        textSize = 32f
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.WRAP_CONTENT,
+                            FrameLayout.LayoutParams.WRAP_CONTENT
+                        )
+                        this.x = x
+                        this.y = y
+                    }
+                    detailStickerCanvas.addView(stickerView)
+                }
             }
-        } else {
-            ivDetailSticker.visibility = View.GONE
         }
 
-        // 수정 버튼 연결
         btnEdit.setOnClickListener {
             val intent = Intent(this, WriteActivity::class.java).apply {
                 putExtra("edit_title", title)
@@ -75,7 +83,6 @@ class DetailActivity : AppCompatActivity() {
             finish()
         }
 
-        // 삭제 버튼 연결
         btnDelete.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("일기 삭제")
@@ -91,7 +98,6 @@ class DetailActivity : AppCompatActivity() {
                 .show()
         }
 
-        // 사진 목록 나열
         photoContainer.removeAllViews()
         if (imageUriString.isNotEmpty()) {
             val uris = imageUriString.split(",").map { it.trim() }.filter { it.isNotEmpty() }
@@ -99,16 +105,16 @@ class DetailActivity : AppCompatActivity() {
                 try {
                     val uri = Uri.parse(uriStr)
 
-                    val frameLayout = android.widget.FrameLayout(this).apply {
+                    val frameLayout = FrameLayout(this).apply {
                         layoutParams = LinearLayout.LayoutParams(200, 200).apply {
                             setMargins(0, 0, 16, 0)
                         }
                     }
 
                     val imageView = ImageView(this).apply {
-                        layoutParams = android.widget.FrameLayout.LayoutParams(
-                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
-                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.MATCH_PARENT
                         )
                         scaleType = ImageView.ScaleType.CENTER_CROP
                     }
@@ -128,7 +134,6 @@ class DetailActivity : AppCompatActivity() {
             }
         }
 
-        // 하단 탭바 연결
         val btnHome = findViewById<LinearLayout>(R.id.btnHome)
         val btnWrite = findViewById<LinearLayout>(R.id.btnWrite)
         val btnCalendar = findViewById<LinearLayout>(R.id.btnCalendar)

@@ -8,6 +8,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="40dp"
         android:orientation="vertical">
 
         <!-- 상단 내용 영역 (스크롤 가능) -->
@@ -55,21 +56,21 @@
                 android:orientation="vertical">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_home"
-                    app:tint="#666666" />
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_home" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:text="홈"
-                    android:textColor="#666666"
-                    android:textSize="11sp" />
+                    android:textColor="#5C469C"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- 쓰기 탭 (가운데 보라색 강조 원형 버튼) -->
+            <!-- 쓰기 탭 (회색 배경 제거 및 다른 탭과 동일한 구조로 통일) -->
             <LinearLayout
                 android:id="@+id/btnWrite"
                 android:layout_width="0dp"
@@ -80,27 +81,18 @@
                 android:gravity="center"
                 android:orientation="vertical">
 
-                <FrameLayout
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:background="#5C469C">
+                <ImageView
+                    android:layout_width="70dp"
+                    android:layout_height="70dp"
+                    android:src="@drawable/ic_write" />
 
-                    <ImageView
-                        android:layout_width="22dp"
-                        android:layout_height="22dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_write"
-                        app:tint="#FFFFFF" />
-                </FrameLayout>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="1dp"
-                    android:text="작성"
-                    android:textColor="#5C469C"
-                    android:textSize="11sp"
-                    android:textStyle="bold" />
+                <!--            <TextView-->
+                <!--                android:layout_width="wrap_content"-->
+                <!--                android:layout_height="wrap_content"-->
+                <!--                android:layout_marginTop="2dp"-->
+                <!--                android:text="작성"-->
+                <!--                android:textColor="#666666"-->
+                <!--                android:textSize="11sp" />-->
             </LinearLayout>
 
             <!-- 캘린더 탭 -->
@@ -115,10 +107,9 @@
                 android:orientation="vertical">
 
                 <ImageView
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:src="@drawable/ic_calendar"
-                    app:tint="#666666" />
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/ic_calendar" />
 
                 <TextView
                     android:layout_width="wrap_content"

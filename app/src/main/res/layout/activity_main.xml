@@ -5,6 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_marginTop="40dp"
     android:background="#F8F9FA"
     tools:context=".MainActivity">
 
@@ -208,10 +209,9 @@
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_home"
-                android:tint="#5C469C" />
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_home" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -235,18 +235,17 @@
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_write"
-                android:tint="#666666" />
+                android:layout_width="70dp"
+                android:layout_height="70dp"
+                android:src="@drawable/ic_write" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="작성"
-                android:textColor="#666666"
-                android:textSize="11sp" />
+            <!--            <TextView-->
+            <!--                android:layout_width="wrap_content"-->
+            <!--                android:layout_height="wrap_content"-->
+            <!--                android:layout_marginTop="2dp"-->
+            <!--                android:text="작성"-->
+            <!--                android:textColor="#666666"-->
+            <!--                android:textSize="11sp" />-->
         </LinearLayout>
 
         <!-- 캘린더 탭 -->
@@ -261,10 +260,9 @@
             android:orientation="vertical">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_calendar"
-                android:tint="#666666" />
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@drawable/ic_calendar" />
 
             <TextView
                 android:layout_width="wrap_content"

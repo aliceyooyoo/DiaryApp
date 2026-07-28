@@ -8,6 +8,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="40dp"
         android:orientation="vertical">
 
         <!-- 상단 콘텐츠 영역 (스크롤 가능) -->
@@ -60,9 +61,9 @@
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:layout_marginTop="10dp"
-                        android:backgroundTint="#5C469C"
+                        android:backgroundTint="#F0EEFA"
                         android:text="검색"
-                        android:textColor="#FFFFFF"
+                        android:textColor="#5C469C"
                         android:textSize="14sp"
                         android:textStyle="bold" />
                 </LinearLayout>
@@ -140,9 +141,9 @@
                 android:id="@+id/btnConfirm"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
-                android:backgroundTint="#5C469C"
+                android:backgroundTint="#F0EEFA"
                 android:text="확인"
-                android:textColor="#FFFFFF"
+                android:textColor="#5C469C"
                 android:textSize="16sp"
                 android:textStyle="bold" />
         </LinearLayout>
