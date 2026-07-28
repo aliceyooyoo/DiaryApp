@@ -43,14 +43,23 @@ class DiaryDbHelper(context: Context) :
         db.close()
     }
 
-    // 기존 일기 수정을 위한 함수 추가
-    fun updateDiary(oldTitle: String, oldDate: String, newTitle: String, newContent: String, newImageUri: String, newSticker: String) {
+    // 기존 일기 수정을 위한 함수 (place 파라미터 추가 + place 컬럼도 함께 업데이트)
+    fun updateDiary(
+        oldTitle: String,
+        oldDate: String,
+        newTitle: String,
+        newContent: String,
+        newImageUri: String,
+        newSticker: String,
+        newPlace: String
+    ) {
         val db = writableDatabase
         val values = ContentValues().apply {
             put("title", newTitle)
             put("content", newContent)
             put("imageUri", newImageUri)
             put("sticker", newSticker)
+            put("place", newPlace)
         }
         db.update("diary", values, "title = ? AND date = ?", arrayOf(oldTitle, oldDate))
         db.close()

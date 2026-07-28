@@ -1,6 +1,5 @@
 package com.example.diaryapp
 
-import com.example.diaryapp.DiaryDbHelper
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -8,8 +7,6 @@ import android.graphics.Color
 import android.net.Uri
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
-import android.view.View
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -28,8 +25,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val btnWrite = findViewById<Button>(R.id.btnWrite)
-        val btnCalendar = findViewById<Button>(R.id.btnCalendar)
+        // XML 레이아웃의 실제 타입(LinearLayout, TextView)에 맞게 수정 완료
+        val btnWrite = findViewById<LinearLayout>(R.id.btnWrite)
+        val btnCalendar = findViewById<LinearLayout>(R.id.btnCalendar)
         val btnMore = findViewById<TextView>(R.id.btnMore)
         val btnSchedule = findViewById<TextView>(R.id.btnSchedule)
 
@@ -131,7 +129,8 @@ class MainActivity : AppCompatActivity() {
                 putExtra("title", diary.title)
                 putExtra("content", diary.content)
                 putExtra("imageUri", diary.imageUri)
-                putExtra("sticker", diary.sticker) // 스티커 데이터 전달 추가 완료
+                putExtra("sticker", diary.sticker)
+                putExtra("place", diary.place)
             }
             startActivity(intent)
         }

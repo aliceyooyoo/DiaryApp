@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -19,18 +19,20 @@ class DetailActivity : AppCompatActivity() {
         setContentView(R.layout.activity_detail)
 
         val tvDate = findViewById<TextView>(R.id.tvDetailDate)
-        val tvSticker = findViewById<TextView>(R.id.tvDetailSticker)
         val tvTitle = findViewById<TextView>(R.id.tvDetailTitle)
         val tvContent = findViewById<TextView>(R.id.tvDetailContent)
-        val ivRepresentative = findViewById<ImageView>(R.id.ivRepresentativePhoto)
-        val subPhotoContainer = findViewById<LinearLayout>(R.id.subPhotoContainer)
+        val tvDetailPlace = findViewById<TextView>(R.id.tvDetailPlace)
+        val photoContainer = findViewById<LinearLayout>(R.id.photoContainer)
+        val detailStickerCanvasContainer = findViewById<FrameLayout>(R.id.detailStickerCanvasContainer)
 
         val btnEdit = findViewById<TextView>(R.id.btnEdit)
         val btnDelete = findViewById<TextView>(R.id.btnDelete)
 
+        // 인텐트로 데이터 받기
         val date = intent.getStringExtra("date") ?: ""
         val title = intent.getStringExtra("title") ?: ""
         val content = intent.getStringExtra("content") ?: ""
+        val place = intent.getStringExtra("place") ?: ""
         val imageUriString = intent.getStringExtra("imageUri") ?: ""
         val sticker = intent.getStringExtra("sticker") ?: ""
 
@@ -38,14 +40,42 @@ class DetailActivity : AppCompatActivity() {
         tvTitle.text = title
         tvContent.text = content
 
-        if (sticker.isNotEmpty()) {
-            tvSticker.text = sticker
-            tvSticker.visibility = View.VISIBLE
+        // 장소가 있으면 표시, 없으면 숨기기
+        if (place.isNotEmpty()) {
+            tvDetailPlace.text = "📍 $place"
+            tvDetailPlace.visibility = View.VISIBLE
         } else {
-            tvSticker.visibility = View.GONE
+            tvDetailPlace.visibility = View.GONE
         }
 
-        // 진짜 수정 버튼 연결 (데이터를 들고 WriteActivity로 이동)
+        // 스티커 데이터 파싱 및 복원
+        if (sticker.isNotEmpty()) {
+            val stickers = sticker.split(",")
+            for (stk in stickers) {
+                val parts = stk.split("@")
+                if (parts.size >= 5) {
+                    val imageName = parts[0]
+                    val x = parts[1].toFloatOrNull() ?: 0f
+                    val y = parts[2].toFloatOrNull() ?: 0f
+                    val scale = parts[3].toFloatOrNull() ?: 1f
+                    val rot = parts[4].toFloatOrNull() ?: 0f
+
+                    val resId = resources.getIdentifier(imageName, "drawable", packageName)
+                    if (resId != 0) {
+                        val stickerView = StickerView(this, imageName, resId).apply {
+                            this.x = x
+                            this.y = y
+                            scaleX = scale
+                            scaleY = scale
+                            rotation = rot
+                        }
+                        detailStickerCanvasContainer.addView(stickerView)
+                    }
+                }
+            }
+        }
+
+        // 수정 버튼 연결
         btnEdit.setOnClickListener {
             val intent = Intent(this, WriteActivity::class.java).apply {
                 putExtra("edit_title", title)
@@ -53,11 +83,13 @@ class DetailActivity : AppCompatActivity() {
                 putExtra("edit_content", content)
                 putExtra("edit_sticker", sticker)
                 putExtra("edit_imageUri", imageUriString)
+                putExtra("edit_place", place)
             }
             startActivity(intent)
             finish()
         }
 
+        // 삭제 버튼 연결
         btnDelete.setOnClickListener {
             AlertDialog.Builder(this)
                 .setTitle("일기 삭제")
@@ -73,73 +105,41 @@ class DetailActivity : AppCompatActivity() {
                 .show()
         }
 
-        subPhotoContainer.removeAllViews()
-
+        // 사진 목록 나열
+        photoContainer.removeAllViews()
         if (imageUriString.isNotEmpty()) {
             val uris = imageUriString.split(",").map { it.trim() }.filter { it.isNotEmpty() }
-
-            if (uris.isNotEmpty()) {
+            for (uriStr in uris) {
                 try {
-                    val repUri = Uri.parse(uris[0])
-                    val inputStream = contentResolver.openInputStream(repUri)
-                    val bitmap = BitmapFactory.decodeStream(inputStream)
-                    inputStream?.close()
-
-                    if (bitmap != null) {
-                        ivRepresentative.setImageBitmap(bitmap)
-                        ivRepresentative.visibility = View.VISIBLE
-                    } else {
-                        ivRepresentative.visibility = View.GONE
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    ivRepresentative.visibility = View.GONE
-                }
-
-                // 대표 사진을 제외한 서브 사진들이 가로 폭을 정확히 채우도록 동적 배치
-                if (uris.size > 1) {
-                    ivRepresentative.post {
-                        val totalWidth = ivRepresentative.width // 대표 사진의 현재 가로 폭
-                        val subUris = uris.subList(1, uris.size)
-                        val spacing = (8 * resources.displayMetrics.density).toInt() // 사진 사이 간격 8dp
-                        val totalSpacing = spacing * (subUris.size - 1)
-                        val eachWidth = (totalWidth - totalSpacing) / subUris.size // 개수에 따라 가로 폭 균등 분할
-                        val eachHeight = (80 * resources.displayMetrics.density).toInt() // 높이 고정
-
-                        subPhotoContainer.removeAllViews()
-                        for (i in subUris.indices) {
-                            try {
-                                val subUri = Uri.parse(subUris[i])
-                                val subStream = contentResolver.openInputStream(subUri)
-                                val subBitmap = BitmapFactory.decodeStream(subStream)
-                                subStream?.close()
-
-                                if (subBitmap != null) {
-                                    val subIv = ImageView(this).apply {
-                                        layoutParams = LinearLayout.LayoutParams(eachWidth, eachHeight).apply {
-                                            setMargins(if (i > 0) spacing else 0, 0, 0, 0)
-                                        }
-                                        scaleType = ImageView.ScaleType.CENTER_CROP
-                                        setImageBitmap(subBitmap)
-                                    }
-                                    subPhotoContainer.addView(subIv)
-                                }
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
+                    val uri = Uri.parse(uriStr)
+                    val frameLayout = FrameLayout(this).apply {
+                        layoutParams = LinearLayout.LayoutParams(200, 200).apply {
+                            setMargins(0, 0, 16, 0)
                         }
                     }
+                    val imageView = ImageView(this).apply {
+                        layoutParams = FrameLayout.LayoutParams(
+                            FrameLayout.LayoutParams.MATCH_PARENT,
+                            FrameLayout.LayoutParams.MATCH_PARENT
+                        )
+                        val inputStream = contentResolver.openInputStream(uri)
+                        val bitmap = BitmapFactory.decodeStream(inputStream)
+                        inputStream?.close()
+                        if (bitmap != null) setImageBitmap(bitmap)
+                        scaleType = ImageView.ScaleType.CENTER_CROP
+                    }
+                    frameLayout.addView(imageView)
+                    photoContainer.addView(frameLayout)
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
-            } else {
-                ivRepresentative.visibility = View.GONE
             }
-        } else {
-            ivRepresentative.visibility = View.GONE
         }
 
-        val btnHome = findViewById<Button>(R.id.btnHome)
-        val btnWrite = findViewById<Button>(R.id.btnWrite)
-        val btnCalendar = findViewById<Button>(R.id.btnCalendar)
+        // 하단 탭바 연결
+        val btnHome = findViewById<LinearLayout>(R.id.btnHome)
+        val btnWrite = findViewById<LinearLayout>(R.id.btnWrite)
+        val btnCalendar = findViewById<LinearLayout>(R.id.btnCalendar)
 
         btnHome.setOnClickListener {
             startActivity(Intent(this, MainActivity::class.java))
