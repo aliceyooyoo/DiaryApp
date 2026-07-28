@@ -22,7 +22,7 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    private val apiKey = "894efd0493fa47be9bd9c09d27182253"
+    private val apiKey = BuildConfig.WEATHER_API_KEY
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

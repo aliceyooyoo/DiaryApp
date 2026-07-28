@@ -23,7 +23,7 @@ import android.location.Location
 import androidx.core.app.ActivityCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-
+import com.example.diaryapp.BuildConfig
 
 class PlaceSearchActivity : AppCompatActivity() {
     private lateinit var placeList: ArrayList<String>
@@ -34,7 +34,7 @@ class PlaceSearchActivity : AppCompatActivity() {
         val api = RetrofitClient.kakaoApi
 
         api.searchPlace(
-            "KakaoAK fc5afabd2d27a7cb6c05aba36ce8b028",
+            "KakaoAK ${BuildConfig.KAKAO_API_KEY}",
             keyword
         ).enqueue(object : Callback<KakaoResponse> {
 

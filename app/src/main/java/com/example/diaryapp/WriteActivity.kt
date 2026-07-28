@@ -23,10 +23,11 @@ import android.app.Activity.RESULT_OK
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import com.example.diaryapp.BuildConfig
 
 class WriteActivity : AppCompatActivity() {
 
-    private val apiKey = "894efd0493fa47be9bd9c09d27182253"
+    private val apiKey = BuildConfig.WEATHER_API_KEY
 
     private val photoList = mutableListOf<Uri>()
     private lateinit var photoContainer: LinearLayout
