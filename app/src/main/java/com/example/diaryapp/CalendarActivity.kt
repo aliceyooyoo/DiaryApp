@@ -1,6 +1,7 @@
 package com.example.diaryapp
 
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
@@ -181,31 +182,34 @@ class CalendarActivity : AppCompatActivity() {
                     }
                 }
 
+                // [수정] 대표 사진(첫 번째 사진) 딱 1장만 추출해서 표시
                 if (!diary.imageUri.isNullOrEmpty()) {
-                    val imageView = ImageView(this).apply {
-                        layoutParams = LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.MATCH_PARENT,
-                            500
-                        ).apply {
-                            setMargins(0, 0, 0, 16)
-                        }
-                        scaleType = ImageView.ScaleType.CENTER_CROP
-                    }
+                    val uris = diary.imageUri!!.split(",").map { it.trim() }.filter { it.isNotEmpty() }
+                    if (uris.isNotEmpty()) {
+                        try {
+                            val uri = Uri.parse(uris[0])
+                            val imageView = ImageView(this).apply {
+                                layoutParams = LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.MATCH_PARENT,
+                                    500
+                                ).apply {
+                                    setMargins(0, 0, 0, 16)
+                                }
+                                scaleType = ImageView.ScaleType.CENTER_CROP
+                            }
 
-                    try {
-                        val imageUri = Uri.parse(diary.imageUri)
-                        imageView.setImageURI(imageUri)
-                        if (imageView.drawable == null) {
-                            val inputStream = contentResolver.openInputStream(imageUri)
-                            val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
-                            imageView.setImageBitmap(bitmap)
+                            val inputStream = contentResolver.openInputStream(uri)
+                            val bitmap = BitmapFactory.decodeStream(inputStream)
                             inputStream?.close()
-                        }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
+                            if (bitmap != null) {
+                                imageView.setImageBitmap(bitmap)
+                            }
 
-                    diarycard.addView(imageView)
+                            diarycard.addView(imageView)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
                 }
 
                 val title = TextView(this).apply {
@@ -231,15 +235,25 @@ class CalendarActivity : AppCompatActivity() {
                     setTextColor(Color.GRAY)
                 }
 
-                val hasValidSticker = !diary.sticker.isNullOrEmpty() && !diary.sticker!!.contains("sticker_smart")
-                val sticker = if (hasValidSticker) {
-                    TextView(this).apply {
-                        text = diary.sticker
-                        textSize = 22f
-                    }
+                // 스마트 스티커 처리
+                val stickerName = if (!diary.sticker.isNullOrEmpty()) {
+                    diary.sticker!!.split(",")[0].split("@")[0]
                 } else {
-                    null
+                    ""
                 }
+
+                val stickerImageView = if (stickerName.isNotEmpty() && stickerName.startsWith("sticker_smart")) {
+                    val resId = resources.getIdentifier(stickerName, "drawable", packageName)
+                    if (resId != 0) {
+                        ImageView(this).apply {
+                            setImageResource(resId)
+                            layoutParams = LinearLayout.LayoutParams(120, 120).apply {
+                                setMargins(0, 10, 0, 0)
+                            }
+                            scaleType = ImageView.ScaleType.FIT_CENTER
+                        }
+                    } else null
+                } else null
 
                 diarycard.addView(title)
                 diarycard.addView(TextView(this).apply { height = 10 })
@@ -251,8 +265,8 @@ class CalendarActivity : AppCompatActivity() {
                     diarycard.addView(TextView(this).apply { height = 10 })
                 }
 
-                if (sticker != null) {
-                    diarycard.addView(sticker)
+                if (stickerImageView != null) {
+                    diarycard.addView(stickerImageView)
                 }
 
                 postContainer.addView(diarycard)

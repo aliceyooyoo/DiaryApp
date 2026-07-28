@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -20,15 +21,17 @@ import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.view.Gravity
 
 class WriteActivity : AppCompatActivity() {
 
     private val photoList = mutableListOf<Uri>()
     private lateinit var photoContainer: LinearLayout
     private lateinit var tvPlace: TextView
-    private lateinit var stickerCanvasContainer: FrameLayout
     private var representativeImageUri: Uri? = null
+
+    // [고정형 스티커 변수] 선택된 스티커의 리소스 이름 (예: "sticker_smart_5")
+    private var selectedStickerName: String = ""
+    private lateinit var ivSelectedSticker: ImageView
 
     private var isEditMode = false
     private var originalTitle = ""
@@ -78,14 +81,15 @@ class WriteActivity : AppCompatActivity() {
         val btnDone = findViewById<TextView>(R.id.btnDone)
         val btnClose = findViewById<TextView>(R.id.btnClose)
 
-        // 🚨 수정된 부분: XML 레이아웃의 실제 타입인 LinearLayout으로 변경
         val btnAddPhoto = findViewById<LinearLayout>(R.id.btnAddPhoto)
         val btnAddSticker = findViewById<LinearLayout>(R.id.btnAddSticker)
         val btnLocation = findViewById<LinearLayout>(R.id.btnLocation)
 
         tvPlace = findViewById(R.id.tvPlace)
         photoContainer = findViewById(R.id.photoContainer)
-        stickerCanvasContainer = findViewById(R.id.stickerCanvasContainer)
+
+        // [수정] 제목 옆에 있는 스티커 ImageView 직접 연결
+        ivSelectedSticker = findViewById(R.id.ivSelectedSticker)
 
         // 수정 모드 진입 시 기존 데이터 채우기
         if (intent.hasExtra("edit_title")) {
@@ -96,30 +100,21 @@ class WriteActivity : AppCompatActivity() {
             etTitle.setText(originalTitle)
             etContent.setText(intent.getStringExtra("edit_content") ?: "")
 
-            // [추가] 장소 복원
             val editPlace = intent.getStringExtra("edit_place") ?: ""
             if (editPlace.isNotEmpty()) {
                 selectedPlace = editPlace
                 tvPlace.text = "📍 $selectedPlace"
             }
 
-            // 스마트 스티커 데이터 복원 (형식: 이름@X@Y@Scale@Rotation)
+            // 고정형 스티커 데이터 복원 (단일 스티커 이름 복원)
             val stickerStr = intent.getStringExtra("edit_sticker") ?: ""
             if (stickerStr.isNotEmpty()) {
-                val stickers = stickerStr.split(",")
-                for (stk in stickers) {
-                    val parts = stk.split("@")
-                    if (parts.size >= 5) {
-                        val imageName = parts[0]
-                        val x = parts[1].toFloatOrNull() ?: 200f
-                        val y = parts[2].toFloatOrNull() ?: 200f
-                        val scale = parts[3].toFloatOrNull() ?: 1f
-                        val rot = parts[4].toFloatOrNull() ?: 0f
-
-                        val resId = resources.getIdentifier(imageName, "drawable", packageName)
-                        if (resId != 0) {
-                            addStickerToCanvas(imageName, resId, x, y, scale, rot)
-                        }
+                selectedStickerName = stickerStr.split(",")[0].split("@")[0]
+                if (selectedStickerName.isNotEmpty()) {
+                    val resId = resources.getIdentifier(selectedStickerName, "drawable", packageName)
+                    if (resId != 0) {
+                        ivSelectedSticker.setImageResource(resId)
+                        ivSelectedSticker.visibility = View.VISIBLE
                     }
                 }
             }
@@ -144,7 +139,7 @@ class WriteActivity : AppCompatActivity() {
             getImage.launch("image/*")
         }
 
-        // 스티커 버튼 클릭 시 1~70번 스마트 스티커 다이얼로그 호출
+        // 스티커 버튼 클릭 시 다이얼로그 호출
         btnAddSticker.setOnClickListener {
             showSmartStickerDialog()
         }
@@ -163,16 +158,8 @@ class WriteActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            // 화면에 배치된 모든 스티커들의 위치, 크기, 회전값 직렬화
-            val stickerDataList = mutableListOf<String>()
-            for (i in 0 until stickerCanvasContainer.childCount) {
-                val child = stickerCanvasContainer.getChildAt(i)
-                if (child is StickerView) {
-                    val data = "${child.imageName}@${child.x}@${child.y}@${child.scaleX}@${child.rotation}"
-                    stickerDataList.add(data)
-                }
-            }
-            val stickerString = stickerDataList.joinToString(",")
+            // 고정된 스티커 이름 저장 (없으면 빈 문자열)
+            val stickerString = selectedStickerName
 
             val sdf = SimpleDateFormat("M월 d일", Locale.KOREA)
             val today = if (isEditMode) originalDate else sdf.format(Date())
@@ -201,7 +188,7 @@ class WriteActivity : AppCompatActivity() {
                     content,
                     imageUriString,
                     stickerString,
-                    selectedPlace // [추가]
+                    selectedPlace
                 )
                 Toast.makeText(this, "일기가 수정되었습니다.", Toast.LENGTH_SHORT).show()
             } else {
@@ -250,7 +237,6 @@ class WriteActivity : AppCompatActivity() {
             .setView(dialogView)
             .create()
 
-        // sticker_smart_1 ~ sticker_smart_70 동적 로드
         for (i in 1..70) {
             val imageName = "sticker_smart_$i"
             val resId = resources.getIdentifier(imageName, "drawable", packageName)
@@ -264,7 +250,10 @@ class WriteActivity : AppCompatActivity() {
                     }
                     scaleType = ImageView.ScaleType.FIT_CENTER
                     setOnClickListener {
-                        addStickerToCanvas(imageName, resId)
+                        // 스티커 선택 시 제목 옆 구석 슬롯에 즉시 반영
+                        selectedStickerName = imageName
+                        ivSelectedSticker.setImageResource(resId)
+                        ivSelectedSticker.visibility = View.VISIBLE
                         dialog.dismiss()
                     }
                 }
@@ -272,27 +261,6 @@ class WriteActivity : AppCompatActivity() {
             }
         }
         dialog.show()
-    }
-
-    private fun addStickerToCanvas(
-        imageName: String,
-        resId: Int,
-        initialX: Float = 200f,
-        initialY: Float = 200f,
-        scale: Float = 1f,
-        rot: Float = 0f
-    ) {
-        val stickerView = StickerView(this, imageName, resId).apply {
-            x = initialX
-            y = initialY
-            scaleX = scale
-            scaleY = scale
-            rotation = rot
-        }
-
-        stickerCanvasContainer.addView(stickerView)
-        stickerView.invalidate()
-        stickerView.requestLayout()
     }
 
     private fun updatePhotoListUI() {

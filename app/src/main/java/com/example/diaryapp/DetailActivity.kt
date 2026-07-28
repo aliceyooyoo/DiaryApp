@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -22,8 +21,8 @@ class DetailActivity : AppCompatActivity() {
         val tvTitle = findViewById<TextView>(R.id.tvDetailTitle)
         val tvContent = findViewById<TextView>(R.id.tvDetailContent)
         val tvDetailPlace = findViewById<TextView>(R.id.tvDetailPlace)
+        val ivDetailSticker = findViewById<ImageView>(R.id.ivDetailSticker)
         val photoContainer = findViewById<LinearLayout>(R.id.photoContainer)
-        val detailStickerCanvasContainer = findViewById<FrameLayout>(R.id.detailStickerCanvasContainer)
 
         val btnEdit = findViewById<TextView>(R.id.btnEdit)
         val btnDelete = findViewById<TextView>(R.id.btnDelete)
@@ -48,31 +47,18 @@ class DetailActivity : AppCompatActivity() {
             tvDetailPlace.visibility = View.GONE
         }
 
-        // 스티커 데이터 파싱 및 복원
+        // 제목 오른쪽 구석 스티커 표시
         if (sticker.isNotEmpty()) {
-            val stickers = sticker.split(",")
-            for (stk in stickers) {
-                val parts = stk.split("@")
-                if (parts.size >= 5) {
-                    val imageName = parts[0]
-                    val x = parts[1].toFloatOrNull() ?: 0f
-                    val y = parts[2].toFloatOrNull() ?: 0f
-                    val scale = parts[3].toFloatOrNull() ?: 1f
-                    val rot = parts[4].toFloatOrNull() ?: 0f
-
-                    val resId = resources.getIdentifier(imageName, "drawable", packageName)
-                    if (resId != 0) {
-                        val stickerView = StickerView(this, imageName, resId).apply {
-                            this.x = x
-                            this.y = y
-                            scaleX = scale
-                            scaleY = scale
-                            rotation = rot
-                        }
-                        detailStickerCanvasContainer.addView(stickerView)
-                    }
-                }
+            val stickerName = sticker.split(",")[0].split("@")[0]
+            val resId = resources.getIdentifier(stickerName, "drawable", packageName)
+            if (resId != 0) {
+                ivDetailSticker.setImageResource(resId)
+                ivDetailSticker.visibility = View.VISIBLE
+            } else {
+                ivDetailSticker.visibility = View.GONE
             }
+        } else {
+            ivDetailSticker.visibility = View.GONE
         }
 
         // 수정 버튼 연결
@@ -112,22 +98,28 @@ class DetailActivity : AppCompatActivity() {
             for (uriStr in uris) {
                 try {
                     val uri = Uri.parse(uriStr)
-                    val frameLayout = FrameLayout(this).apply {
+
+                    val frameLayout = android.widget.FrameLayout(this).apply {
                         layoutParams = LinearLayout.LayoutParams(200, 200).apply {
                             setMargins(0, 0, 16, 0)
                         }
                     }
+
                     val imageView = ImageView(this).apply {
-                        layoutParams = FrameLayout.LayoutParams(
-                            FrameLayout.LayoutParams.MATCH_PARENT,
-                            FrameLayout.LayoutParams.MATCH_PARENT
+                        layoutParams = android.widget.FrameLayout.LayoutParams(
+                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                            android.widget.FrameLayout.LayoutParams.MATCH_PARENT
                         )
-                        val inputStream = contentResolver.openInputStream(uri)
-                        val bitmap = BitmapFactory.decodeStream(inputStream)
-                        inputStream?.close()
-                        if (bitmap != null) setImageBitmap(bitmap)
                         scaleType = ImageView.ScaleType.CENTER_CROP
                     }
+
+                    val inputStream = contentResolver.openInputStream(uri)
+                    val bitmap = BitmapFactory.decodeStream(inputStream)
+                    inputStream?.close()
+                    if (bitmap != null) {
+                        imageView.setImageBitmap(bitmap)
+                    }
+
                     frameLayout.addView(imageView)
                     photoContainer.addView(frameLayout)
                 } catch (e: Exception) {

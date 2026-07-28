@@ -79,141 +79,135 @@
             android:layout_weight="1"
             android:padding="16dp">
 
-            <!-- 본문 콘텐츠와 스티커 캔버스를 같은 FrameLayout 안에 형제로 배치 -->
-            <FrameLayout
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
+                <!-- 상단 날씨 및 위치 정보 카드 (가로 정렬) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_marginBottom="16dp"
+                    android:background="#FFFFFF"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:padding="16dp">
 
-                    <!-- 상단 날씨 및 위치 정보 카드 (가로 정렬) -->
+                    <!-- 왼쪽: 날씨 정보 -->
                     <LinearLayout
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="16dp"
-                        android:background="#FFFFFF"
+                        android:layout_weight="1"
                         android:gravity="center_vertical"
-                        android:orientation="horizontal"
-                        android:padding="16dp">
+                        android:orientation="horizontal">
 
-                        <!-- 왼쪽: 날씨 정보 -->
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_marginEnd="12dp"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_sun" />
+
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal">
+                            android:orientation="vertical">
 
-                            <ImageView
-                                android:layout_width="32dp"
-                                android:layout_height="32dp"
-                                android:layout_marginEnd="12dp"
-                                android:scaleType="centerInside"
-                                android:src="@drawable/ic_sun" />
-
-                            <LinearLayout
+                            <TextView
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
-                                android:orientation="vertical">
+                                android:text="29℃"
+                                android:textColor="#000000"
+                                android:textSize="16sp"
+                                android:textStyle="bold" />
 
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="29℃"
-                                    android:textColor="#000000"
-                                    android:textSize="16sp"
-                                    android:textStyle="bold" />
-
-                                <TextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="구름 조금"
-                                    android:textColor="#666666"
-                                    android:textSize="12sp" />
-                            </LinearLayout>
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="구름 조금"
+                                android:textColor="#666666"
+                                android:textSize="12sp" />
                         </LinearLayout>
-
-                        <!-- 오른쪽: 장소 선택 및 표시 뷰 -->
-                        <TextView
-                            android:id="@+id/tvPlace"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:background="#EFEBFA"
-                            android:maxWidth="160dp"
-                            android:ellipsize="end"
-                            android:maxLines="1"
-                            android:paddingHorizontal="12dp"
-                            android:paddingVertical="6dp"
-                            android:text="📍 장소 선택 ✕"
-                            android:textColor="#5C469C"
-                            android:textSize="12sp" />
                     </LinearLayout>
 
-                    <!-- 본문 작성 흰색 박스 컨테이너 -->
+                    <!-- 오른쪽: 장소 선택 및 표시 뷰 -->
+                    <TextView
+                        android:id="@+id/tvPlace"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="#EFEBFA"
+                        android:maxWidth="160dp"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:paddingHorizontal="12dp"
+                        android:paddingVertical="6dp"
+                        android:text="📍 장소 선택 ✕"
+                        android:textColor="#5C469C"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <!-- 본문 작성 흰색 박스 컨테이너 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#FFFFFF"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- 제목과 오른쪽 구석 스티커 고정 영역 -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:background="#FFFFFF"
-                        android:orientation="vertical"
-                        android:padding="16dp">
-
-                        <TextView
-                            android:id="@+id/tvSelectedSticker"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginBottom="8dp"
-                            android:textSize="28sp"
-                            android:visibility="gone" />
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingBottom="12dp">
 
                         <EditText
                             android:id="@+id/etTitle"
-                            android:layout_width="match_parent"
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
+                            android:layout_weight="1"
                             android:background="@null"
                             android:hint="제목"
-                            android:paddingBottom="12dp"
                             android:textColorHint="#999999"
                             android:textSize="18sp"
                             android:textStyle="bold" />
 
-                        <EditText
-                            android:id="@+id/etContent"
-                            android:layout_width="match_parent"
-                            android:layout_height="180dp"
-                            android:layout_marginBottom="24dp"
-                            android:background="@null"
-                            android:gravity="top"
-                            android:hint="본문"
-                            android:textColorHint="#999999"
-                            android:textSize="14sp" />
-
-                        <!-- 첨부된 사진 가로 나열 영역 (스크롤) -->
-                        <HorizontalScrollView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:scrollbars="none">
-
-                            <LinearLayout
-                                android:id="@+id/photoContainer"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal" />
-                        </HorizontalScrollView>
+                        <ImageView
+                            android:id="@+id/ivSelectedSticker"
+                            android:layout_width="48dp"
+                            android:layout_height="48dp"
+                            android:layout_marginStart="8dp"
+                            android:scaleType="fitCenter"
+                            android:visibility="gone" />
                     </LinearLayout>
+
+                    <EditText
+                        android:id="@+id/etContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="180dp"
+                        android:layout_marginBottom="24dp"
+                        android:background="@null"
+                        android:gravity="top"
+                        android:hint="본문"
+                        android:textColorHint="#999999"
+                        android:textSize="14sp" />
+
+                    <!-- 첨부된 사진 가로 나열 영역 (스크롤) -->
+                    <HorizontalScrollView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:scrollbars="none">
+
+                        <LinearLayout
+                            android:id="@+id/photoContainer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal" />
+                    </HorizontalScrollView>
                 </LinearLayout>
-
-                <!-- 본문과 완전히 같은 좌표계에서 함께 스크롤되는 스티커 캔버스 -->
-                <FrameLayout
-                    android:id="@+id/stickerCanvasContainer"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:clickable="false"
-                    android:focusable="false" />
-
-            </FrameLayout>
+            </LinearLayout>
         </ScrollView>
 
         <!-- 하단 탭바 (아이콘 제거, 텍스트만 배치) -->
