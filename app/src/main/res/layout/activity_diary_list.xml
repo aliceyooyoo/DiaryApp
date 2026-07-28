@@ -1,83 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".DiaryListActivity">
+    android:background="#F8F9FA">
 
-    <TextView
-        android:id="@+id/tvAppName"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="DIARY"
-        android:layout_marginTop="40dp"
-        android:layout_marginStart="16dp"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-
-    <TextView
-        android:id="@+id/tvRecentTitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:text="최근 일기"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/tvAppName"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <ScrollView
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        app:layout_constraintTop_toBottomOf="@id/tvRecentTitle"
-        app:layout_constraintBottom_toTopOf="@id/btnWrite"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
-        <LinearLayout
-            android:id="@+id/diaryContainer"
+        <!-- 상단 내용 영역 (스크롤 가능) -->
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:padding="20dp"
+            android:scrollbars="none">
 
-    </ScrollView>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btnWrite"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
-        android:text="쓰기"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+                <!-- 일기 목록 카드가 동적으로 추가될 컨테이너 -->
+                <LinearLayout
+                    android:id="@+id/diaryContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
 
-    <Button
-        android:id="@+id/btnHome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="30dp"
-        android:layout_marginBottom="16dp"
-        android:text="홈"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+            </LinearLayout>
+        </ScrollView>
 
-    <Button
-        android:id="@+id/btnCalendar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="30dp"
-        android:layout_marginBottom="16dp"
-        android:text="캘린더"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <!-- 하단 탭바 (홈, 작성, 캘린더) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:background="#FFFFFF"
+            android:elevation="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+            <!-- 홈 탭 -->
+            <LinearLayout
+                android:id="@+id/btnHome"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_home"
+                    app:tint="#666666" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="홈"
+                    android:textColor="#666666"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- 쓰기 탭 (가운데 보라색 강조 원형 버튼) -->
+            <LinearLayout
+                android:id="@+id/btnWrite"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="#5C469C">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_write"
+                        app:tint="#FFFFFF" />
+                </FrameLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:text="작성"
+                    android:textColor="#5C469C"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- 캘린더 탭 -->
+            <LinearLayout
+                android:id="@+id/btnCalendar"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_calendar"
+                    app:tint="#666666" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="캘린더"
+                    android:textColor="#666666"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

@@ -1,47 +1,152 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp"
+    android:background="#F8F9FA"
     android:id="@+id/main">
 
-    <EditText
-        android:id="@+id/etSearch"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="장소를 검색하세요"/>
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btnSearch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="검색"/>
+        <!-- 상단 콘텐츠 영역 (스크롤 가능) -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:padding="20dp"
+            android:scrollbars="none">
 
-    <ListView
-        android:id="@+id/listPlace"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-    <Button
-        android:id="@+id/btnConfirm"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="확인"/>
+                <!-- 검색 카드 박스 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#FFFFFF"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:elevation="2dp">
 
-    <Button
-        android:id="@+id/btnCurrentLocation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="📍 현재 위치" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="장소 검색"
+                        android:textColor="#000000"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:paddingBottom="12dp" />
 
-    <TextView
-        android:id="@+id/tvCurrentLocation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="16sp"/>
+                    <!-- 검색 입력창 -->
+                    <EditText
+                        android:id="@+id/etSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:background="#F8F9FA"
+                        android:hint="장소를 검색하세요"
+                        android:paddingHorizontal="12dp"
+                        android:textSize="14sp"
+                        android:textColor="#000000"
+                        android:textColorHint="#999999" />
 
-</LinearLayout>
+                    <!-- 검색 버튼 -->
+                    <Button
+                        android:id="@+id/btnSearch"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:layout_marginTop="10dp"
+                        android:backgroundTint="#5C469C"
+                        android:text="검색"
+                        android:textColor="#FFFFFF"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+                <!-- 현재 위치 정보 박스 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="#FFFFFF"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:elevation="2dp">
+
+                    <Button
+                        android:id="@+id/btnCurrentLocation"
+                        android:layout_width="match_parent"
+                        android:layout_height="45dp"
+                        android:backgroundTint="#F0EEFA"
+                        android:text="📍 현재 위치 가져오기"
+                        android:textColor="#5C469C"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCurrentLocation"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:text="위치 정보가 없습니다."
+                        android:textColor="#666666"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <!-- 검색 결과 리스트 영역 (ListView 혹은 동적 추가용 컨테이너) -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="#FFFFFF"
+                    android:orientation="vertical"
+                    android:padding="20dp"
+                    android:elevation="2dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="검색 결과"
+                        android:textColor="#000000"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:paddingBottom="8dp" />
+
+                    <!-- 리스트뷰 높이 문제 방지를 위해 감싸거나 고정 높이/제어 필요시 사용 -->
+                    <ListView
+                        android:id="@+id/listPlace"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:divider="@android:color/transparent"
+                        android:dividerHeight="8dp" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- 하단 확인 버튼 영역 (또는 기존 하단 고정 액션 버튼) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#FFFFFF"
+            android:padding="16dp"
+            android:elevation="12dp">
+
+            <Button
+                android:id="@+id/btnConfirm"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:backgroundTint="#5C469C"
+                android:text="확인"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

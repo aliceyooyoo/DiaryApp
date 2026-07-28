@@ -1,130 +1,270 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="20dp">
+    android:background="#F8F9FA">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:title="캘린더" />
-
-    <!-- 년/월 + 이전/다음 버튼 -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/btnPreviousMonth"
-            android:layout_width="wrap_content"
+        <!-- 상단 툴바 (CalendarActivity의 R.id.toolbar 에 대응) -->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="〈"
-            android:textSize="20sp"
-            android:textColor="#000000" />
+            android:background="#FFFFFF"
+            android:elevation="2dp"
+            android:title="캘린더" />
 
-        <TextView
-            android:id="@+id/tvMonthYear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="2026년 7월"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#000000" />
+        <!-- 메인 콘텐츠 영역 (스크롤 가능) -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:clipToPadding="false"
+            android:padding="16dp"
+            android:scrollbars="none">
 
-        <TextView
-            android:id="@+id/btnNextMonth"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:padding="8dp"
-            android:text="〉"
-            android:textSize="20sp"
-            android:textColor="#000000" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- 캘린더 전체를 감싸는 흰색 카드 박스 -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="#FFFFFF"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:elevation="2dp">
+
+                    <!-- 년/월 + 이전/다음 버튼 영역 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingBottom="12dp">
+
+                        <TextView
+                            android:id="@+id/btnPreviousMonth"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:gravity="center"
+                            android:text="〈"
+                            android:textSize="18sp"
+                            android:textColor="#333333"
+                            android:background="?attr/selectableItemBackgroundBorderless" />
+
+                        <TextView
+                            android:id="@+id/tvMonthYear"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:text="2026년 7월"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            android:textColor="#000000" />
+
+                        <TextView
+                            android:id="@+id/btnNextMonth"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:gravity="center"
+                            android:text="〉"
+                            android:textSize="18sp"
+                            android:textColor="#333333"
+                            android:background="?attr/selectableItemBackgroundBorderless" />
+                    </LinearLayout>
+
+                    <!-- 요일 헤더 (일 ~ 토) -->
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="7"
+                        android:paddingBottom="8dp">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_columnWeight="1"
+                            android:gravity="center"
+                            android:text="일"
+                            android:textStyle="bold"
+                            android:textColor="#E53935" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_columnWeight="1"
+                            android:gravity="center"
+                            android:text="월"
+                            android:textColor="#666666" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_columnWeight="1"
+                            android:gravity="center"
+                            android:text="화"
+                            android:textColor="#666666" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_columnWeight="1"
+                            android:gravity="center"
+                            android:text="수"
+                            android:textColor="#666666" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_columnWeight="1"
+                            android:gravity="center"
+                            android:text="목"
+                            android:textColor="#666666" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_columnWeight="1"
+                            android:gravity="center"
+                            android:text="금"
+                            android:textColor="#666666" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_columnWeight="1"
+                            android:gravity="center"
+                            android:text="토"
+                            android:textColor="#1E88E5" />
+                    </GridLayout>
+
+                    <!-- 실제 날짜가 동적으로 들어갈 그리드 영역 -->
+                    <GridLayout
+                        android:id="@+id/calendarGrid"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="7" />
+                </LinearLayout>
+
+                <!-- 선택된 날짜 타이틀 (예: 7.21 (화)) -->
+                <TextView
+                    android:id="@+id/tvSelectedDate"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="12dp"
+                    android:text="7.21 (화)"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="#000000" />
+
+                <!-- 해당 날짜의 일기 목록 카드들이 동적으로 들어갈 컨테이너 -->
+                <LinearLayout
+                    android:id="@+id/postContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical" />
+
+            </LinearLayout>
+        </ScrollView>
+
+        <!-- 하단 통일된 네비게이션 탭바 (캘린더 활성화) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="65dp"
+            android:background="#FFFFFF"
+            android:elevation="12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <!-- 홈 탭 -->
+            <LinearLayout
+                android:id="@+id/btnHomeTab"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_home"
+                    android:tint="#666666" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="홈"
+                    android:textColor="#666666"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- 쓰기 탭 (일반 회색으로 변경) -->
+            <LinearLayout
+                android:id="@+id/btnWriteTab"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_write"
+                    android:tint="#666666" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="작성"
+                    android:textColor="#666666"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- 캘린더 탭 (보라색으로 활성화) -->
+            <LinearLayout
+                android:id="@+id/btnCalendarTab"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_calendar"
+                    android:tint="#5C469C" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="캘린더"
+                    android:textColor="#5C469C"
+                    android:textSize="11sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
 
     </LinearLayout>
 
-    <!-- 요일 -->
-    <GridLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="7"
-        android:paddingTop="20dp">
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="일" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="월" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="화" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="수" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="목" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="금" />
-
-        <TextView
-            android:layout_width="0dp"
-            android:layout_height="40dp"
-            android:layout_columnWeight="1"
-            android:gravity="center"
-            android:text="토" />
-
-    </GridLayout>
-
-    <!-- 실제 날짜가 자동으로 들어갈 영역 -->
-    <GridLayout
-        android:id="@+id/calendarGrid"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:columnCount="7" />
-    <TextView
-        android:id="@+id/tvSelectedDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:gravity="center"
-        android:text=""
-        android:textSize="18sp" />
-
-    <LinearLayout
-        android:id="@+id/postContainer"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:orientation="vertical" />
-</LinearLayout>
+</FrameLayout>

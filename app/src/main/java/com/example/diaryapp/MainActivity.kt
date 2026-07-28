@@ -1,6 +1,5 @@
 package com.example.diaryapp
 
-import com.example.diaryapp.DiaryDbHelper
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -9,7 +8,6 @@ import android.net.Uri
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -28,8 +26,9 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val btnWrite = findViewById<Button>(R.id.btnWrite)
-        val btnCalendar = findViewById<Button>(R.id.btnCalendar)
+        // XML 레이아웃의 실제 타입(LinearLayout, TextView)에 맞게 수정 완료
+        val btnWrite = findViewById<LinearLayout>(R.id.btnWrite)
+        val btnCalendar = findViewById<LinearLayout>(R.id.btnCalendar)
         val btnMore = findViewById<TextView>(R.id.btnMore)
         val btnSchedule = findViewById<TextView>(R.id.btnSchedule)
 
@@ -131,7 +130,8 @@ class MainActivity : AppCompatActivity() {
                 putExtra("title", diary.title)
                 putExtra("content", diary.content)
                 putExtra("imageUri", diary.imageUri)
-                putExtra("sticker", diary.sticker) // 스티커 데이터 전달 추가 완료
+                putExtra("sticker", diary.sticker)
+                putExtra("place", diary.place)
             }
             startActivity(intent)
         }
@@ -158,8 +158,15 @@ class MainActivity : AppCompatActivity() {
             photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
         }
 
+        // 우측 텍스트 영역
         val right = LinearLayout(this)
         right.orientation = LinearLayout.VERTICAL
+        val rightParams = LinearLayout.LayoutParams(
+            0,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            1f
+        )
+        right.layoutParams = rightParams
 
         val date = TextView(this)
         date.text = diary.date
@@ -169,15 +176,40 @@ class MainActivity : AppCompatActivity() {
         val title = TextView(this)
         title.text = diary.title
         title.textSize = 16f
+        title.setTextColor(Color.parseColor("#000000"))
+        title.setPadding(0, (2 * dp).toInt(), 0, (2 * dp).toInt())
 
         val content = TextView(this)
         content.text = diary.content
         content.textSize = 13f
+        content.setTextColor(Color.parseColor("#333333"))
         content.maxLines = 2
 
         right.addView(date)
         right.addView(title)
         right.addView(content)
+
+        // 하단 장소 레이아웃 (날씨 제거)
+        val tvPlace = TextView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                topMargin = (8 * dp).toInt()
+            }
+            textSize = 11f
+            setTextColor(Color.parseColor("#666666"))
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        }
+
+        if (!diary.place.isNullOrEmpty()) {
+            tvPlace.text = "📍 ${diary.place}"
+            tvPlace.visibility = View.VISIBLE
+            right.addView(tvPlace)
+        } else {
+            tvPlace.visibility = View.GONE
+        }
 
         card.addView(photoView)
         card.addView(right)

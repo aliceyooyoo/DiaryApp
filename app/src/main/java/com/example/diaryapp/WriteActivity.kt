@@ -1,16 +1,18 @@
 package com.example.diaryapp
 
+import android.app.Activity.RESULT_OK
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
-import android.view.MotionEvent
+import android.view.Gravity
 import android.view.View
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,35 +21,24 @@ import androidx.appcompat.app.AppCompatActivity
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.app.Activity.RESULT_OK
-import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
-import com.example.diaryapp.BuildConfig
 
 class WriteActivity : AppCompatActivity() {
 
-    private val apiKey = BuildConfig.WEATHER_API_KEY
-
     private val photoList = mutableListOf<Uri>()
     private lateinit var photoContainer: LinearLayout
-    private lateinit var stickerOverlay: FrameLayout
     private lateinit var tvPlace: TextView
     private var representativeImageUri: Uri? = null
 
-    // 여러 개 스티커 관리
-    private val stickerViews = mutableListOf<TextView>()
-
-    // 마지막으로 받아온 날씨 (저장 시 사용)
-    private var lastWeatherTemp: String? = null
-    private var lastWeatherDesc: String? = null
+    // [고정형 스티커 변수] 선택된 스티커의 리소스 이름 (예: "sticker_smart_5")
+    private var selectedStickerName: String = ""
+    private lateinit var ivSelectedSticker: ImageView
 
     private var isEditMode = false
     private var originalTitle = ""
     private var originalDate = ""
     private var selectedPlace = ""
 
-    private var placeLauncher =
+    private val placeLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
                 val place = result.data?.getStringExtra("place")
@@ -71,6 +62,7 @@ class WriteActivity : AppCompatActivity() {
                         e.printStackTrace()
                     }
                 }
+
                 photoList.clear()
                 photoList.addAll(uris)
                 if (representativeImageUri == null || !photoList.contains(representativeImageUri)) {
@@ -79,14 +71,6 @@ class WriteActivity : AppCompatActivity() {
                 updatePhotoListUI()
             }
         }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 100 && resultCode == RESULT_OK) {
-            selectedPlace = data?.getStringExtra("place") ?: ""
-            tvPlace.text = "📍 $selectedPlace"
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,26 +81,17 @@ class WriteActivity : AppCompatActivity() {
         val btnDone = findViewById<TextView>(R.id.btnDone)
         val btnClose = findViewById<TextView>(R.id.btnClose)
 
-        val btnAddPhoto = findViewById<TextView>(R.id.btnAddPhoto)
-        val btnAddSticker = findViewById<TextView>(R.id.btnAddSticker)
-        val btnLocation = findViewById<TextView>(R.id.btnLocation)
+        val btnAddPhoto = findViewById<LinearLayout>(R.id.btnAddPhoto)
+        val btnAddSticker = findViewById<LinearLayout>(R.id.btnAddSticker)
+        val btnLocation = findViewById<LinearLayout>(R.id.btnLocation)
 
-        stickerOverlay = findViewById(R.id.stickerOverlay)
         tvPlace = findViewById(R.id.tvPlace)
         photoContainer = findViewById(R.id.photoContainer)
 
-        // 날씨 불러오기
-        fetchWeather(37.5665, 126.9780) { result ->
-            lastWeatherTemp = "${result.temp}°C"
-            lastWeatherDesc = result.description
-            findViewById<TextView>(R.id.tvTemp).text = lastWeatherTemp
-            findViewById<TextView>(R.id.tvDescription).text = lastWeatherDesc
-            result.iconBitmap?.let {
-                findViewById<ImageView>(R.id.ivWeatherIcon).setImageBitmap(it)
-            }
-        }
+        // [수정] 제목 옆에 있는 스티커 ImageView 직접 연결
+        ivSelectedSticker = findViewById(R.id.ivSelectedSticker)
 
-        // 수정 모드로 들어온 경우 기존 데이터 채워넣기
+        // 수정 모드 진입 시 기존 데이터 채우기
         if (intent.hasExtra("edit_title")) {
             isEditMode = true
             originalTitle = intent.getStringExtra("edit_title") ?: ""
@@ -125,22 +100,21 @@ class WriteActivity : AppCompatActivity() {
             etTitle.setText(originalTitle)
             etContent.setText(intent.getStringExtra("edit_content") ?: "")
 
+            val editPlace = intent.getStringExtra("edit_place") ?: ""
+            if (editPlace.isNotEmpty()) {
+                selectedPlace = editPlace
+                tvPlace.text = "📍 $selectedPlace"
+            }
+
+            // 고정형 스티커 데이터 복원 (단일 스티커 이름 복원)
             val stickerStr = intent.getStringExtra("edit_sticker") ?: ""
             if (stickerStr.isNotEmpty()) {
-                try {
-                    val arr = org.json.JSONArray(stickerStr)
-                    for (i in 0 until arr.length()) {
-                        val obj = arr.getJSONObject(i)
-                        addStickerToOverlay(
-                            obj.getString("emoji"),
-                            obj.getDouble("x").toFloat(),
-                            obj.getDouble("y").toFloat()
-                        )
-                    }
-                } catch (e: Exception) {
-                    // 예전 방식(이모지만 저장된 데이터) 호환 처리
-                    for (emoji in stickerStr) {
-                        addStickerToOverlay(emoji.toString())
+                selectedStickerName = stickerStr.split(",")[0].split("@")[0]
+                if (selectedStickerName.isNotEmpty()) {
+                    val resId = resources.getIdentifier(selectedStickerName, "drawable", packageName)
+                    if (resId != 0) {
+                        ivSelectedSticker.setImageResource(resId)
+                        ivSelectedSticker.visibility = View.VISIBLE
                     }
                 }
             }
@@ -157,11 +131,18 @@ class WriteActivity : AppCompatActivity() {
             }
         }
 
-        btnClose.setOnClickListener { finish() }
+        btnClose.setOnClickListener {
+            finish()
+        }
 
-        btnAddPhoto.setOnClickListener { getImage.launch("image/*") }
+        btnAddPhoto.setOnClickListener {
+            getImage.launch("image/*")
+        }
 
-        btnAddSticker.setOnClickListener { showEmojiCategoryDialog() }
+        // 스티커 버튼 클릭 시 다이얼로그 호출
+        btnAddSticker.setOnClickListener {
+            showSmartStickerDialog()
+        }
 
         btnLocation.setOnClickListener {
             val intent = Intent(this, PlaceSearchActivity::class.java)
@@ -172,20 +153,13 @@ class WriteActivity : AppCompatActivity() {
             val title = etTitle.text.toString().trim()
             val content = etContent.text.toString().trim()
 
-            val stickerJson = org.json.JSONArray().apply {
-                for (sv in stickerViews) {
-                    put(org.json.JSONObject().apply {
-                        put("emoji", sv.text.toString())
-                        put("x", sv.x)
-                        put("y", sv.y)
-                    })
-                }
-            }.toString()
-
             if (title.isEmpty() && content.isEmpty()) {
                 Toast.makeText(this, "제목이나 내용을 입력해주세요.", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
+
+            // 고정된 스티커 이름 저장 (없으면 빈 문자열)
+            val stickerString = selectedStickerName
 
             val sdf = SimpleDateFormat("M월 d일", Locale.KOREA)
             val today = if (isEditMode) originalDate else sdf.format(Date())
@@ -213,7 +187,8 @@ class WriteActivity : AppCompatActivity() {
                     title,
                     content,
                     imageUriString,
-                    stickerJson
+                    stickerString,
+                    selectedPlace
                 )
                 Toast.makeText(this, "일기가 수정되었습니다.", Toast.LENGTH_SHORT).show()
             } else {
@@ -222,10 +197,8 @@ class WriteActivity : AppCompatActivity() {
                     title = title,
                     content = content,
                     imageUri = imageUriString,
-                    sticker = stickerJson,
-                    place = selectedPlace,
-                    weatherTemp = lastWeatherTemp,
-                    weatherDesc = lastWeatherDesc
+                    sticker = stickerString,
+                    place = selectedPlace
                 )
                 Toast.makeText(this, "일기가 작성되었습니다.", Toast.LENGTH_SHORT).show()
             }
@@ -233,6 +206,61 @@ class WriteActivity : AppCompatActivity() {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
+    }
+
+    private fun showSmartStickerDialog() {
+        val dialogView = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(30, 30, 30, 30)
+        }
+
+        val gridLayout = GridLayout(this).apply {
+            columnCount = 4
+            alignmentMode = GridLayout.ALIGN_BOUNDS
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        val scrollView = ScrollView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1200
+            )
+            addView(gridLayout)
+        }
+        dialogView.addView(scrollView)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("스티커를 선택하세요")
+            .setView(dialogView)
+            .create()
+
+        for (i in 1..70) {
+            val imageName = "sticker_smart_$i"
+            val resId = resources.getIdentifier(imageName, "drawable", packageName)
+            if (resId != 0) {
+                val imgView = ImageView(this).apply {
+                    setImageResource(resId)
+                    layoutParams = GridLayout.LayoutParams().apply {
+                        width = 180
+                        height = 180
+                        setMargins(15, 15, 15, 15)
+                    }
+                    scaleType = ImageView.ScaleType.FIT_CENTER
+                    setOnClickListener {
+                        // 스티커 선택 시 제목 옆 구석 슬롯에 즉시 반영
+                        selectedStickerName = imageName
+                        ivSelectedSticker.setImageResource(resId)
+                        ivSelectedSticker.visibility = View.VISIBLE
+                        dialog.dismiss()
+                    }
+                }
+                gridLayout.addView(imgView)
+            }
+        }
+        dialog.show()
     }
 
     private fun updatePhotoListUI() {
@@ -274,7 +302,7 @@ class WriteActivity : AppCompatActivity() {
                     FrameLayout.LayoutParams.WRAP_CONTENT,
                     FrameLayout.LayoutParams.WRAP_CONTENT
                 ).apply {
-                    gravity = android.view.Gravity.TOP or android.view.Gravity.END
+                    gravity = Gravity.TOP or Gravity.END
                 }
 
                 setOnClickListener {
@@ -290,131 +318,5 @@ class WriteActivity : AppCompatActivity() {
             frameLayout.addView(deleteBtn)
             photoContainer.addView(frameLayout)
         }
-    }
-
-    // 스티커 하나를 오버레이에 추가 (드래그 가능, 길게 누르면 삭제)
-    private fun addStickerToOverlay(emoji: String, initX: Float? = null, initY: Float? = null) {
-        val stickerView = TextView(this).apply {
-            text = emoji
-            textSize = 36f
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-            )
-            x = initX ?: (40f + (stickerViews.size * 30f))
-            y = initY ?: (40f + (stickerViews.size * 30f))
-        }
-
-        stickerView.setOnTouchListener { view, event ->
-            when (event.action) {
-                MotionEvent.ACTION_DOWN -> {
-                    view.tag = Pair(event.rawX - view.x, event.rawY - view.y)
-                    true
-                }
-                MotionEvent.ACTION_MOVE -> {
-                    val offset = view.tag as? Pair<Float, Float> ?: return@setOnTouchListener false
-                    view.x = event.rawX - offset.first
-                    view.y = event.rawY - offset.second
-                    true
-                }
-                else -> false
-            }
-        }
-
-        stickerView.setOnLongClickListener {
-            stickerOverlay.removeView(stickerView)
-            stickerViews.remove(stickerView)
-            true
-        }
-
-        stickerOverlay.addView(stickerView)
-        stickerViews.add(stickerView)
-    }
-
-    private fun showEmojiCategoryDialog() {
-        val categories = arrayOf("감정", "날씨", "동물", "음식")
-        AlertDialog.Builder(this)
-            .setTitle("스티커 카테고리를 선택하세요")
-            .setItems(categories) { _, which ->
-                when (which) {
-                    0 -> {
-                        val emotions = arrayOf(
-                            "😊", "😃", "😄", "😁", "😆", "😅", "🤣", "😂",
-                            "🙂", "🙃", "😉", "😇", "🥰", "😍", "🤩", "😘",
-                            "😋", "😛", "😜", "🤪", "😎", "🥳", "😏",
-                            "😞", "😔", "😢", "😭", "😤", "😠", "😡",
-                            "👍", "👎", "👏", "🙌", "👋", "🤝", "❤️", "🧡",
-                            "💛", "💚", "💙", "💜", "🖤", "🤍", "💔", "💕", "🔥"
-                        )
-                        showEmojiPicker(emotions)
-                    }
-                    1 -> {
-                        val weathers = arrayOf(
-                            "☀️", "🌤️", "⛅", "🌥️", "☁️", "🌦️", "🌧️",
-                            "⛈️", "🌩️", "⚡", "❄️", "🌨️", "☃️", "⛄",
-                            "🌬️", "💨", "🌪️", "🌫️", "☔", "💧", "💦", "🌈"
-                        )
-                        showEmojiPicker(weathers)
-                    }
-                    2 -> {
-                        val realAnimals = arrayOf(
-                            "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼",
-                            "🐨", "🐯", "🦁", "🐮", "🐷", "🐸", "🐵", "🐔",
-                            "🐧", "🐥", "🦆", "🦅", "🦉", "🦇", "🐺", "🐗",
-                            "🐴", "🦄", "🐝", "🐛", "🦋", "🐞", "🐢", "🐙"
-                        )
-                        showEmojiPicker(realAnimals)
-                    }
-                    3 -> {
-                        val realFoods = arrayOf(
-                            "🍎", "🍌", "🍉", "🍇", "🍓", "🍒", "🍑", "🍍",
-                            "🥝", "🍅", "🥑", "🍞", "🥐", "🥖", "🥨", "🧀",
-                            "🍖", "🍗", "🥩", "🥓", "🍔", "🍟", "🍕",
-                            "🌮", "🌯", "🥙", "🥗", "🥪", "🥫", "🍝", "🍜",
-                            "🍲", "🍛", "🍣", "🍱", "🥟", "🍚",
-                            "🍙", "🍘", "🍡", "🍧", "🍨", "🍦",
-                            "🎂", "🍮", "🍭", "🍬", "🍫", "🍩", "🍪",
-                            "☕", "🍵", "🥤", "🧃", "🍺", "🍻", "🍷", "🍸", "🍹"
-                        )
-                        showEmojiPicker(realFoods)
-                    }
-                }
-            }
-            .show()
-    }
-
-    private fun showEmojiPicker(emojis: Array<String>) {
-        AlertDialog.Builder(this)
-            .setTitle("스티커를 선택하세요")
-            .setItems(emojis) { _, which ->
-                addStickerToOverlay(emojis[which])
-            }
-            .show()
-    }
-
-    private fun fetchWeather(lat: Double, lon: Double, onResult: (WeatherResult) -> Unit) {
-        Thread {
-            try {
-                val urlStr = "https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric&lang=kr"
-                val conn = URL(urlStr).openConnection() as HttpURLConnection
-                conn.requestMethod = "GET"
-                val response = conn.inputStream.bufferedReader().readText()
-                val json = JSONObject(response)
-                val main = json.getJSONObject("main")
-                val weather = json.getJSONArray("weather").getJSONObject(0)
-                val temp = main.getDouble("temp").toInt()
-                val tempMax = main.getDouble("temp_max").toInt()
-                val tempMin = main.getDouble("temp_min").toInt()
-                val humidity = main.getInt("humidity")
-                val description = weather.getString("description")
-                val icon = weather.getString("icon")
-                val iconUrl = URL("https://openweathermap.org/img/wn/$icon@2x.png")
-                val iconBitmap = BitmapFactory.decodeStream(iconUrl.openStream())
-                val result = WeatherResult(temp, tempMax, tempMin, humidity, description, icon, iconBitmap)
-                runOnUiThread { onResult(result) }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }.start()
     }
 }
