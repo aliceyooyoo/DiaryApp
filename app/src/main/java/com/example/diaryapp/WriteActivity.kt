@@ -21,6 +21,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -61,25 +63,32 @@ class WriteActivity : AppCompatActivity() {
     private val getImage =
         registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
             if (uris.isNotEmpty()) {
-                for (uri in uris) {
-                    try {
-                        contentResolver.takePersistableUriPermission(
-                            uri,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION
-                        )
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }
+                val copiedUris = uris.mapNotNull { copyImageToInternalStorage(it) }
 
                 photoList.clear()
-                photoList.addAll(uris)
+                photoList.addAll(copiedUris)
                 if (representativeImageUri == null || !photoList.contains(representativeImageUri)) {
                     representativeImageUri = photoList.firstOrNull()
                 }
                 updatePhotoListUI()
             }
         }
+
+    private fun copyImageToInternalStorage(uri: Uri): Uri? {
+        return try {
+            val inputStream = contentResolver.openInputStream(uri) ?: return null
+            val fileName = "diary_img_${System.currentTimeMillis()}_${(0..999).random()}.jpg"
+            val file = File(filesDir, fileName)
+            val outputStream = FileOutputStream(file)
+            inputStream.copyTo(outputStream)
+            inputStream.close()
+            outputStream.close()
+            Uri.fromFile(file)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -363,8 +372,18 @@ class WriteActivity : AppCompatActivity() {
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT
                 )
-                setImageURI(uri)
                 scaleType = ImageView.ScaleType.CENTER_CROP
+
+                try {
+                    val inputStream = contentResolver.openInputStream(uri)
+                    val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                    inputStream?.close()
+                    if (bitmap != null) {
+                        setImageBitmap(bitmap)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
 
                 if (uri == representativeImageUri) {
                     setBackgroundColor(Color.RED)

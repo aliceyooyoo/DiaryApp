@@ -4,8 +4,8 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.net.Uri
 import android.icu.text.SimpleDateFormat
+import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.ImageView
@@ -26,7 +26,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // XML 레이아웃의 실제 타입(LinearLayout, TextView)에 맞게 수정 완료
         val btnWrite = findViewById<LinearLayout>(R.id.btnWrite)
         val btnCalendar = findViewById<LinearLayout>(R.id.btnCalendar)
         val btnMore = findViewById<TextView>(R.id.btnMore)
@@ -58,7 +57,7 @@ class MainActivity : AppCompatActivity() {
         val today = sdf.format(Date())
         tvGreeting.text = "$today\n오늘 하루는 어땠나요?"
 
-        this.fetchWeather(37.5665, 126.9780) { result ->
+        fetchWeather(37.5665, 126.9780) { result ->
             findViewById<TextView>(R.id.tvTemp).text = "${result.temp}°C"
             findViewById<TextView>(R.id.tvDescription).text = result.description
             findViewById<TextView>(R.id.tvTempMaxMin).text = "최고 ${result.tempMax}° / 최저 ${result.tempMin}°"
@@ -143,11 +142,15 @@ class MainActivity : AppCompatActivity() {
         photoView.layoutParams = photoParams
         photoView.scaleType = ImageView.ScaleType.CENTER_CROP
 
-        if (!diary.imageUri.isNullOrEmpty()) {
+        val firstUriStr = diary.imageUri?.split(",")?.map { it.trim() }?.firstOrNull { it.isNotEmpty() }
+        if (!firstUriStr.isNullOrEmpty()) {
             try {
-                val firstUriStr = diary.imageUri.split(",").map { it.trim() }.firstOrNull { it.isNotEmpty() }
-                if (!firstUriStr.isNullOrEmpty()) {
-                    photoView.setImageURI(Uri.parse(firstUriStr))
+                val uri = Uri.parse(firstUriStr)
+                val inputStream = contentResolver.openInputStream(uri)
+                val bitmap = BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                if (bitmap != null) {
+                    photoView.setImageBitmap(bitmap)
                 } else {
                     photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
                 }
@@ -158,7 +161,6 @@ class MainActivity : AppCompatActivity() {
             photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
         }
 
-        // 우측 텍스트 영역
         val right = LinearLayout(this)
         right.orientation = LinearLayout.VERTICAL
         val rightParams = LinearLayout.LayoutParams(
@@ -189,7 +191,6 @@ class MainActivity : AppCompatActivity() {
         right.addView(title)
         right.addView(content)
 
-        // 하단 장소 레이아웃 (날씨 제거)
         val tvPlace = TextView(this).apply {
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,

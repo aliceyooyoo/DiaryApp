@@ -82,11 +82,15 @@ class DiaryListActivity : AppCompatActivity() {
         photoView.layoutParams = photoParams
         photoView.scaleType = ImageView.ScaleType.CENTER_CROP
 
-        if (!diary.imageUri.isNullOrEmpty()) {
+        val firstUriStr = diary.imageUri?.split(",")?.map { it.trim() }?.firstOrNull { it.isNotEmpty() }
+        if (!firstUriStr.isNullOrEmpty()) {
             try {
-                val firstUriStr = diary.imageUri.split(",").map { it.trim() }.firstOrNull { it.isNotEmpty() }
-                if (!firstUriStr.isNullOrEmpty()) {
-                    photoView.setImageURI(Uri.parse(firstUriStr))
+                val uri = Uri.parse(firstUriStr)
+                val inputStream = contentResolver.openInputStream(uri)
+                val bitmap = android.graphics.BitmapFactory.decodeStream(inputStream)
+                inputStream?.close()
+                if (bitmap != null) {
+                    photoView.setImageBitmap(bitmap)
                 } else {
                     photoView.setBackgroundColor(Color.parseColor("#D9D9D9"))
                 }

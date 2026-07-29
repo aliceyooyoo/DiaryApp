@@ -4,9 +4,76 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import java.io.File
+import java.io.FileOutputStream
 
 class DiaryDbHelper(context: Context) :
     SQLiteOpenHelper(context, "diary.db", null, 10) {
+
+    private val appContext = context.applicationContext
+
+    init {
+        copyDatabaseFromAssetsIfNeeded(context)
+        copyImagesFromAssetsIfNeeded(context)
+    }
+
+    private fun copyDatabaseFromAssetsIfNeeded(context: Context) {
+        val dbFile = context.getDatabasePath("diary.db")
+        if (dbFile.exists()) return
+
+        try {
+            dbFile.parentFile?.mkdirs()
+            context.assets.open("diary.db").use { input ->
+                FileOutputStream(dbFile).use { output ->
+                    input.copyTo(output)
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun copyImagesFromAssetsIfNeeded(context: Context) {
+        try {
+            val assetFiles = context.assets.list("") ?: return
+            val imageFiles = assetFiles.filter {
+                it.endsWith(".jpg") || it.endsWith(".jpeg") || it.endsWith(".png")
+            }
+
+            for (fileName in imageFiles) {
+                val destFile = File(context.filesDir, fileName)
+                if (destFile.exists()) continue
+
+                context.assets.open(fileName).use { input ->
+                    FileOutputStream(destFile).use { output ->
+                        input.copyTo(output)
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    // 파일명만 저장된 옛날 데이터(image1.jpg 등)는 내부 저장소 절대경로로 변환
+    // 이미 file:// 또는 content:// 형식이면 그대로 둠 (새로 작성한 일기)
+    private fun resolveImageUri(rawUri: String): String {
+        if (rawUri.isEmpty()) return ""
+        if (rawUri.startsWith("file://") || rawUri.startsWith("content://")) {
+            return rawUri
+        }
+        // 파일명만 있는 경우 (예: image1.jpg)
+        val file = File(appContext.filesDir, rawUri)
+        return "file://${file.absolutePath}"
+    }
+
+    private fun resolveImageUriList(rawImageUri: String?): String {
+        if (rawImageUri.isNullOrEmpty()) return ""
+        return rawImageUri.split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .joinToString(",") { resolveImageUri(it) }
+    }
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -109,7 +176,8 @@ class DiaryDbHelper(context: Context) :
         val date = cursor.getString(cursor.getColumnIndexOrThrow("date")) ?: ""
         val title = cursor.getString(cursor.getColumnIndexOrThrow("title")) ?: ""
         val content = cursor.getString(cursor.getColumnIndexOrThrow("content")) ?: ""
-        val imageUri = cursor.getString(cursor.getColumnIndexOrThrow("imageUri")) ?: ""
+        val rawImageUri = cursor.getString(cursor.getColumnIndexOrThrow("imageUri")) ?: ""
+        val imageUri = resolveImageUriList(rawImageUri)
         val sticker = cursor.getString(cursor.getColumnIndexOrThrow("sticker")) ?: ""
         val place = cursor.getString(cursor.getColumnIndexOrThrow("place")) ?: ""
         val weatherIcon = cursor.getString(cursor.getColumnIndexOrThrow("weatherIcon"))
